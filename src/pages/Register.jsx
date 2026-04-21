@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
+import BgBlobs from '../components/BgBlobs'
 
 export default function Register() {
   const navigate   = useNavigate()
@@ -34,7 +35,7 @@ export default function Register() {
   return (
     <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-10 min-h-[100dvh]">
       <BgBlobs />
-      <div className="relative z-10 overflow-y-auto no-scrollbar">
+      <div className="relative z-10 overflow-y-auto no-scrollbar fade-in">
         <h1 className="text-white font-extrabold text-[22px] text-center mb-4">{t('register')}</h1>
         <input className="w-full bg-white/90 rounded-full px-4 py-2.5 text-[13px] text-[#555] outline-none mb-2 border-none"
           type="text" placeholder={t('firstname')} value={prenom} onChange={e => setPrenom(e.target.value)} />

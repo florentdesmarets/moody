@@ -15,6 +15,8 @@ export default function Drawer({ open, onClose }) {
     { icon: '📊', label: t('navStats'),    path: '/stats'    },
     { icon: '📈', label: t('navChart'),    path: '/chart'    },
     { icon: '👤', label: t('navAccount'),  path: '/account'  },
+    { icon: '🆘', label: t('navCrisis'),   path: '/crisis', crisis: true },
+    { icon: 'ℹ️', label: t('navAbout'),    path: '/about'    },
   ]
 
   async function handleLogout() {
@@ -35,8 +37,8 @@ export default function Drawer({ open, onClose }) {
         onClick={onClose}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-[78%] max-w-[320px] z-50 flex flex-col rounded-r-[36px] transition-transform duration-[350ms] ${open ? 'translate-x-0' : 'translate-x-full'}`}
-        style={{ background: 'rgba(220,75,30,0.97)' }}
+        className={`fixed top-0 right-0 h-full w-[78%] max-w-[320px] z-50 flex flex-col rounded-tl-[36px] rounded-bl-[36px] transition-transform duration-[350ms] ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{ background: 'var(--drawer-bg)' }}
       >
         <div className="flex items-center gap-3 px-5 pt-14 pb-5 border-b border-white/20">
           <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-[26px]">
@@ -51,7 +53,13 @@ export default function Drawer({ open, onClose }) {
             <button
               key={item.path}
               onClick={() => handleNav(item.path)}
-              className={`flex items-center gap-3 px-3 py-3 rounded-2xl text-[13px] font-semibold transition-all duration-200 text-left w-full ${location.pathname === item.path ? 'bg-white/25 text-white' : 'text-white/80 hover:bg-white/18 hover:text-white'}`}
+              className={`flex items-center gap-3 px-3 py-3 rounded-2xl text-[13px] font-semibold transition-all duration-200 text-left w-full ${
+                item.crisis
+                  ? 'bg-white/20 text-white border border-white/30 mt-1'
+                  : location.pathname === item.path
+                    ? 'bg-white/25 text-white'
+                    : 'text-white/80 hover:bg-white/18 hover:text-white'
+              }`}
             >
               <span className="w-6 text-center text-[17px]">{item.icon}</span>
               {item.label}

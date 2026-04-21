@@ -8,7 +8,8 @@
       "Bash(cp /tmp/moodtracker-src/moodtracker-src/.env.local C:/Users/Florent/OneDrive/Bureau/dev/MoodTracker/MoodTrackerApp/moodtracker/.env.local)",
       "Bash(git -C \"C:/Users/Florent/OneDrive/Bureau/dev/MoodTracker/MoodTrackerApp/moodtracker\" worktree remove --force \"C:/Users/Florent/OneDrive/Bureau/dev/MoodTracker/MoodTrackerApp/moodtracker/.claude/worktrees/focused-kare-e6b9ae\")",
       "Read(//c/Users/Florent/OneDrive/Bureau/dev/MoodTracker/MoodTrackerApp/moodtracker/**)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git add *)"
     ]
   }
 }

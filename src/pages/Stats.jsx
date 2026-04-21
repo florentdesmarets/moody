@@ -35,12 +35,17 @@ export default function Stats() {
     if (moodsMap[dateStr]) streak++; else break
   }
 
-  // Données réelles des 7 derniers jours (lun → auj)
+  // Semaine calendaire lun → dim
+  const monday = new Date(today)
+  const dow = today.getDay() === 0 ? 6 : today.getDay() - 1 // 0=lun … 6=dim
+  monday.setDate(today.getDate() - dow)
+
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`
   const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() - (6 - i))
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
     const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
-    return { dateStr, niveau: moodsMap[dateStr]?.niveau ?? null, isToday: i === 6 }
+    return { dateStr, niveau: moodsMap[dateStr]?.niveau ?? null, isToday: dateStr === todayStr, isFuture: d > today }
   })
 
   return (
@@ -65,20 +70,26 @@ export default function Stats() {
         <div className="bg-white/12 rounded-2xl p-3 mt-3">
           <p className="text-white text-[12px] font-bold mb-2">{t('thisWeek')}</p>
           <div className="flex items-end gap-1.5 h-16">
-            {weekDays.map(({ niveau, isToday }, i) => (
+            {weekDays.map(({ niveau, isToday, isFuture }, i) => (
               <div key={i} className="flex-1 rounded-t-md"
                 style={{
-                  height: niveau !== null ? (niveau / 10 * 100) + '%' : '8%',
-                  background: niveau !== null
-                    ? (isToday ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.5)')
-                    : 'rgba(255,255,255,0.15)',
+                  height: niveau !== null ? (niveau / 7 * 100) + '%' : '8%',
+                  background: isFuture
+                    ? 'rgba(255,255,255,0.08)'
+                    : niveau !== null
+                      ? (isToday ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.5)')
+                      : 'rgba(255,255,255,0.18)',
                   minHeight: '4px',
                 }}
               />
             ))}
           </div>
           <div className="flex justify-between mt-1">
-            {t('daysShort').map((d, i) => <span key={i} className="text-[8px] text-white/55">{d}</span>)}
+            {weekDays.map(({ isToday }, i) => (
+              <span key={i} className={`text-[8px] ${isToday ? 'text-white font-bold' : 'text-white/55'}`}>
+                {t('daysShort')[i]}
+              </span>
+            ))}
           </div>
         </div>
       </div>

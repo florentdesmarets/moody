@@ -24,8 +24,16 @@ body {
   max-width: 430px;
 }
 
+:root {
+  --bg-gradient: linear-gradient(160deg, #FFD07A 0%, #FF8C5A 60%, #FF6B5A 100%);
+  --drawer-bg: rgba(220,75,30,0.97);
+  --blob1: #FFE08A;
+  --blob2: #FF5533;
+  --blob3: #FFD07A;
+}
+
 .bg-app {
-  background: linear-gradient(160deg, #FFD07A 0%, #FF8C5A 60%, #FF6B5A 100%);
+  background: var(--bg-gradient);
   min-height: 100dvh;
 }
 
@@ -38,22 +46,52 @@ body {
 }
 
 @keyframes blobFloat {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
-  33%       { transform: translate(10px, -14px) scale(1.04); }
-  66%       { transform: translate(-8px, 8px) scale(0.97); }
+  0%   { transform: translate(0px, 0px) scale(1); }
+  15%  { transform: translate(8px, -10px) scale(1.12); }
+  30%  { transform: translate(14px, -18px) scale(0.92); }
+  45%  { transform: translate(6px, -8px) scale(1.08); }
+  60%  { transform: translate(-8px, 6px) scale(1.15); }
+  75%  { transform: translate(-14px, 12px) scale(0.90); }
+  90%  { transform: translate(-4px, 4px) scale(1.06); }
+  100% { transform: translate(0px, 0px) scale(1); }
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: fadeInUp 0.3s ease; }
+.fade-in { animation: fadeInUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.fade-in-scale { animation: fadeInScale 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.slide-in { animation: slideInRight 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }
 
 @keyframes heartbeat {
   0%, 100% { transform: scale(1); }
   50%       { transform: scale(1.12); }
 }
 .heartbeat { animation: heartbeat 1s infinite; }
+
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.7); }
+  70%  { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.pop-in { animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }

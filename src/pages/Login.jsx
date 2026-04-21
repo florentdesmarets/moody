@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
+import BgBlobs from '../components/BgBlobs'
 
 export default function Login() {
   const navigate   = useNavigate()
@@ -24,7 +25,7 @@ export default function Login() {
   return (
     <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-14 pb-10 min-h-[100dvh]">
       <BgBlobs />
-      <div className="relative z-10">
+      <div className="relative z-10 fade-in">
         <h1 className="text-white font-extrabold text-[22px] text-center mb-6">{t('login')}</h1>
         <input className="w-full bg-white/90 rounded-full px-4 py-2.5 text-[13px] text-[#555] outline-none mb-2 border-none focus:bg-white"
           type="email" placeholder={t('email')} value={email} onChange={e => setEmail(e.target.value)} />

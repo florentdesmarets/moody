@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LangProvider }          from './context/LangContext'
+import { ThemeProvider }         from './context/ThemeContext'
 import Welcome      from './pages/Welcome'
 import Login        from './pages/Login'
 import Register     from './pages/Register'
@@ -13,6 +14,8 @@ import Calendar     from './pages/Calendar'
 import Stats        from './pages/Stats'
 import Chart        from './pages/Chart'
 import Account      from './pages/Account'
+import Crisis       from './pages/Crisis'
+import About        from './pages/About'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -29,8 +32,9 @@ function PublicRoute({ children }) {
 export default function App() {
   return (
     <AuthProvider>
+      <ThemeProvider>
       <LangProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/moodtracker">
           <Routes>
             <Route path="/"         element={<PublicRoute><Welcome /></PublicRoute>} />
             <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
@@ -44,10 +48,13 @@ export default function App() {
             <Route path="/stats"         element={<PrivateRoute><Stats /></PrivateRoute>} />
             <Route path="/chart"         element={<PrivateRoute><Chart /></PrivateRoute>} />
             <Route path="/account"       element={<PrivateRoute><Account /></PrivateRoute>} />
+            <Route path="/crisis"        element={<PrivateRoute><Crisis /></PrivateRoute>} />
+            <Route path="/about"         element={<About />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </LangProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }

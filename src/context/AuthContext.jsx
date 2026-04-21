@@ -1,5 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { getTheme } from '../lib/themes'
+
+function applyThemeCSSVars(theme) {
+  const r = document.documentElement
+  r.style.setProperty('--bg-gradient', theme.gradient)
+  r.style.setProperty('--drawer-bg',   theme.drawer)
+  r.style.setProperty('--blob1',       theme.blob1)
+  r.style.setProperty('--blob2',       theme.blob2)
+  r.style.setProperty('--blob3',       theme.blob3)
+}
 
 const AuthContext = createContext(null)
 
@@ -15,6 +25,10 @@ export function AuthProvider({ children }) {
       .eq('id', userId)
       .single()
     setProfile(data ?? null)
+    if (data?.theme) {
+      applyThemeCSSVars(getTheme(data.theme))
+      localStorage.setItem('theme', data.theme)
+    }
   }
 
   useEffect(() => {
