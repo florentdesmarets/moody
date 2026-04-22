@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
 import { useMoods } from '../hooks/useMoods'
+import { translations } from '../context/LangContext'
 import { BADGES, computeBadges, getAvatar } from '../lib/badges'
 import { useTheme } from '../context/ThemeContext'
 import { requestNotificationPermission, isNotificationGranted, scheduleNotification, cancelNotification } from '../hooks/useNotifications'
@@ -123,9 +124,71 @@ export default function Account() {
     const today = new Date()
     const year  = today.getFullYear()
     const month = today.getMonth()
-    const data  = await fetchMonth(year, month)
+    const data    = await fetchMonth(year, month)
     const entries = Object.values(data).sort((a, b) => a.date.localeCompare(b.date))
     const stats = getStats(data)
+
+    // ── Calcul corrélation tags (mois sélectionné uniquement) ──────────────
+    const tagsFR = translations.fr.tags
+    const tagsEN = translations.en.tags
+    const tagList = lang === 'en' ? tagsEN : tagsFR
+
+    function hasTag(commentaire, idx) {
+      if (!commentaire) return false
+      const parts = commentaire.split(/,\s*/).map(p => p.trim())
+      return parts.includes(tagsFR[idx]) || parts.includes(tagsEN[idx])
+    }
+
+    const tagAnalysis = entries.length >= 3
+      ? tagsFR.map((_, idx) => {
+          const withTag    = entries.filter(m => hasTag(m.commentaire, idx))
+          const withoutTag = entries.filter(m => !hasTag(m.commentaire, idx))
+          if (withTag.length < 2 || withoutTag.length < 1) return null
+          const avgWith    = withTag.reduce((s, m) => s + m.niveau, 0) / withTag.length
+          const avgWithout = withoutTag.reduce((s, m) => s + m.niveau, 0) / withoutTag.length
+          const impact     = avgWith - avgWithout
+          const conf       = withTag.length >= 8 ? (lang === 'en' ? 'Reliable' : 'Fiable')
+                           : withTag.length >= 4 ? (lang === 'en' ? 'Indicative' : 'Indicatif')
+                           : (lang === 'en' ? 'Unconfirmed' : 'À confirmer')
+          return { label: tagList[idx], impact, avgWith, avgWithout, count: withTag.length, conf }
+        }).filter(Boolean).sort((a, b) => b.impact - a.impact)
+      : []
+
+    const tagHelps  = tagAnalysis.filter(t => t.impact >=  0.3)
+    const tagDrains = tagAnalysis.filter(t => t.impact <= -0.3)
+
+    const tagCorrelHTML = (tagHelps.length > 0 || tagDrains.length > 0) ? `
+<h2>${lang === 'en' ? 'Activity impact on mood' : 'Impact des activités sur l\'humeur'} — ${months[month]} ${year}</h2>
+<table style="font-size:11px;">
+  <thead><tr style="background:#fff8f5;">
+    <th style="text-align:left;padding:6px;color:#bbb;font-weight:600;">${lang === 'en' ? 'Activity' : 'Activité'}</th>
+    <th style="text-align:center;padding:6px;color:#bbb;font-weight:600;">${lang === 'en' ? 'Impact' : 'Impact'}</th>
+    <th style="text-align:center;padding:6px;color:#bbb;font-weight:600;">${lang === 'en' ? 'With' : 'Avec'}</th>
+    <th style="text-align:center;padding:6px;color:#bbb;font-weight:600;">${lang === 'en' ? 'Without' : 'Sans'}</th>
+    <th style="text-align:center;padding:6px;color:#bbb;font-weight:600;">N</th>
+    <th style="text-align:center;padding:6px;color:#bbb;font-weight:600;">${lang === 'en' ? 'Reliability' : 'Fiabilité'}</th>
+  </tr></thead>
+  <tbody>
+    ${tagHelps.length > 0 ? `<tr><td colspan="6" style="background:#f0fdf4;color:#16a34a;font-weight:700;font-size:10px;padding:6px 6px 4px;text-transform:uppercase;letter-spacing:1px;">✨ ${lang === 'en' ? 'What helps' : 'Ce qui aide'}</td></tr>` : ''}
+    ${tagHelps.map(t => `<tr>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;">${t.label}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;color:#16a34a;font-weight:700;text-align:center;">+${t.impact.toFixed(1)}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;">${t.avgWith.toFixed(1)}/7</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;">${t.avgWithout.toFixed(1)}/7</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;">${t.count}×</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;font-size:10px;color:#64748b;">${t.conf}</td>
+    </tr>`).join('')}
+    ${tagDrains.length > 0 ? `<tr><td colspan="6" style="background:#fff1f2;color:#dc2626;font-weight:700;font-size:10px;padding:6px 6px 4px;text-transform:uppercase;letter-spacing:1px;">😔 ${lang === 'en' ? 'What affects' : 'Ce qui affecte'}</td></tr>` : ''}
+    ${[...tagDrains].reverse().map(t => `<tr>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;">${t.label}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;color:#dc2626;font-weight:700;text-align:center;">${t.impact.toFixed(1)}</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;">${t.avgWith.toFixed(1)}/7</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;">${t.avgWithout.toFixed(1)}/7</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;">${t.count}×</td>
+      <td style="padding:5px 6px;border-bottom:1px solid #f5ede5;text-align:center;font-size:10px;color:#64748b;">${t.conf}</td>
+    </tr>`).join('')}
+  </tbody>
+</table>` : ''
 
     const months     = t('months')
     const MOOD_COLORS = ['#ddd','#FF4F4F','#FF7A4F','#FFB347','#FFD700','#9ACD32','#4CAF50','#3DBF7F']
@@ -256,6 +319,8 @@ export default function Account() {
 </div>
 
 ${topTags.length ? `<h2>${isEn ? 'Frequent activities &amp; feelings' : 'Activités &amp; ressentis fréquents'}</h2><div class="tags">${topTags.map(([tag,c]) => `<span class="tag">${tag} <strong>(${c})</strong></span>`).join('')}</div>` : ''}
+
+${tagCorrelHTML}
 
 <h2>${isEn ? 'Detailed log' : 'Historique détaillé'}</h2>
 <table>${entries.map(e => `<tr>
