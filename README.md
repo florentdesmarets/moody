@@ -151,7 +151,7 @@ Le déploiement est automatisé via GitHub Actions à chaque push sur `main`.
 
 Moody est gratuit et open-source. Si l'app t'aide et que tu souhaites participer aux frais d'hébergement :
 
-👉 [PayPal — florentdesmarets](https://paypal.me/florentdesmarets)
+👉 [Buy Me a Coffee ☕](https://buymeacoffee.com/florent.d)
 
 ---
 

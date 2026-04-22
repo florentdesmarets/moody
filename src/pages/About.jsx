@@ -6,7 +6,7 @@ import AppHeader from '../components/AppHeader'
 import { useLang } from '../context/LangContext'
 
 const APP_URL    = 'https://florentdesmarets.github.io/moodtracker/'
-const PAYPAL_URL = 'https://paypal.me/florentdesmarets'
+const DONATE_URL = 'https://buymeacoffee.com/florent.d'
 
 function AppQRCode({ size = 110 }) {
   const ref = useRef()
@@ -75,7 +75,7 @@ export default function About() {
         <div className="bg-white/15 rounded-3xl px-5 py-4 mb-3 slide-in stagger-3">
           <p className="text-white font-bold text-[13px] mb-2">💙 {t('aboutDonateTitle')}</p>
           <p className="text-white/80 text-[12px] leading-relaxed mb-3">{t('aboutDonateText')}</p>
-          <a href={PAYPAL_URL} target="_blank" rel="noopener noreferrer"
+          <a href={DONATE_URL} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full text-[13px] font-bold no-underline active:scale-[0.97] transition-transform"
             style={{ background: 'rgba(255,255,255,0.9)', color: '#0070ba' }}>
             {t('aboutDonateBtn')}
