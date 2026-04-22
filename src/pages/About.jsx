@@ -77,7 +77,7 @@ export default function About() {
           <p className="text-white/80 text-[12px] leading-relaxed mb-3">{t('aboutDonateText')}</p>
           <a href={DONATE_URL} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full text-[13px] font-bold no-underline active:scale-[0.97] transition-transform"
-            style={{ background: 'rgba(255,255,255,0.9)', color: '#0070ba' }}>
+            style={{ background: '#FFDD00', color: '#1a1a1a' }}>
             {t('aboutDonateBtn')}
           </a>
         </div>
