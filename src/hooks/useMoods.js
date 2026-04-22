@@ -78,20 +78,56 @@ export function useMoods() {
   }, [])
 
   const fetchGlobalStats = useCallback(async () => {
-    if (!user) return { count: 0, streak: 0 }
+    if (!user) return { count: 0, streak: 0, positiveStreak: 0, positiveDaysCount: 0, commentCount: 0, longCommentCount: 0, goodSleepCount: 0, wellFedCount: 0, notTiredCount: 0 }
     const { data } = await supabase
-      .from('moods').select('date').eq('user_id', user.id).order('date', { ascending: false })
-    if (!data || data.length === 0) return { count: 0, streak: 0 }
+      .from('moods')
+      .select('date, niveau, commentaire, sommeil, nourriture, fatigue')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+    if (!data || data.length === 0) return { count: 0, streak: 0, positiveStreak: 0, positiveDaysCount: 0, commentCount: 0, longCommentCount: 0, goodSleepCount: 0, wellFedCount: 0, notTiredCount: 0 }
+
     const count = data.length
     const pad = (n) => String(n).padStart(2, '0')
     const today = new Date()
+
+    // Streak actuel (jours consécutifs depuis aujourd'hui)
+    const dateSet = new Set(data.map(m => m.date))
     let streak = 0
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < 400; i++) {
       const d = new Date(today); d.setDate(today.getDate() - i)
       const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
-      if (data.some(m => m.date === dateStr)) streak++; else break
+      if (dateSet.has(dateStr)) streak++; else break
     }
-    return { count, streak }
+
+    // Données triées par date croissante pour les streaks positifs
+    const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
+
+    // Streak positif le plus long (humeur >= 5 jours consécutifs)
+    let positiveStreak = 0, curPositive = 0
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i].niveau >= 5) {
+        // Vérifier que c'est le jour suivant
+        if (i === 0) { curPositive = 1 }
+        else {
+          const prev = new Date(sorted[i-1].date)
+          const curr = new Date(sorted[i].date)
+          const diff = (curr - prev) / 86400000
+          curPositive = diff === 1 ? curPositive + 1 : 1
+        }
+        positiveStreak = Math.max(positiveStreak, curPositive)
+      } else {
+        curPositive = 0
+      }
+    }
+
+    const positiveDaysCount  = data.filter(m => m.niveau >= 5).length
+    const commentCount       = data.filter(m => m.commentaire && m.commentaire.trim().length > 0).length
+    const longCommentCount   = data.filter(m => m.commentaire && m.commentaire.trim().length >= 50).length
+    const goodSleepCount     = data.filter(m => m.sommeil != null && m.sommeil >= 7).length
+    const wellFedCount       = data.filter(m => m.nourriture === 3).length
+    const notTiredCount      = data.filter(m => m.fatigue === 3).length
+
+    return { count, streak, positiveStreak, positiveDaysCount, commentCount, longCommentCount, goodSleepCount, wellFedCount, notTiredCount }
   }, [user])
 
   return { fetchMonth, saveMood, deleteMood, getStats, fetchGlobalStats, loading }
