@@ -1,5 +1,5 @@
-const CACHE = 'moodtracker-1.1.0'
-const PRECACHE = ['/', '/index.html']
+const CACHE = 'moody-1.2.0'
+const PRECACHE = ['/moodtracker/', '/moodtracker/index.html']
 
 let notifTimer = null
 
@@ -45,8 +45,8 @@ function scheduleNext(time, title, body) {
   notifTimer = setTimeout(() => {
     self.registration.showNotification(title, {
       body,
-      icon: '/icons/web-app-manifest-192x192.png',
-      badge: '/icons/favicon-96x96.png',
+      icon: '/moodtracker/icons/web-app-manifest-192x192.png',
+      badge: '/moodtracker/icons/favicon-96x96.png',
       vibrate: [200, 100, 200],
     })
     scheduleNext(time, title, body)
