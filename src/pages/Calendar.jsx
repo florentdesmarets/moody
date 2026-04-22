@@ -116,7 +116,6 @@ export default function Calendar() {
           </>
         )}
       </div>
-      </div>
       <MoodModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
