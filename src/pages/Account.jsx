@@ -113,8 +113,20 @@ export default function Account() {
   async function handleLogout() { await signOut(); navigate('/') }
 
   async function handleDeleteAccount() {
+    // 1. Supprimer toutes les entrées d'humeur de l'utilisateur
+    const { error: moodsError } = await supabase
+      .from('moods').delete().eq('user_id', user.id)
+    if (moodsError) { alert(moodsError.message); return }
+
+    // 2. Supprimer le profil
+    const { error: profileError } = await supabase
+      .from('profiles').delete().eq('id', user.id)
+    if (profileError) { alert(profileError.message); return }
+
+    // 3. Supprimer le compte auth (les FK sont maintenant libres)
     const { error } = await supabase.rpc('delete_user')
     if (error) { alert(error.message); return }
+
     await signOut()
     navigate('/')
   }
