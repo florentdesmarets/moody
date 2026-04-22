@@ -38,7 +38,11 @@ export default function Login() {
             {loading ? '...' : t('loginBtn')}
           </button>
         </div>
-        <p onClick={() => navigate('/')} className="text-white/75 text-[12px] text-center mt-4 cursor-pointer">{t('back')}</p>
+        <p onClick={() => navigate('/forgot-password')}
+          className="text-white/70 text-[12px] text-center mt-3 cursor-pointer underline underline-offset-2">
+          🔑 {t('forgotPassword')}
+        </p>
+        <p onClick={() => navigate('/')} className="text-white/75 text-[12px] text-center mt-3 cursor-pointer">{t('back')}</p>
       </div>
     </div>
   )

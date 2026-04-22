@@ -17,8 +17,10 @@ import Calendar     from './pages/Calendar'
 import Stats        from './pages/Stats'
 import Chart        from './pages/Chart'
 import Account      from './pages/Account'
-import Crisis       from './pages/Crisis'
-import About        from './pages/About'
+import Crisis         from './pages/Crisis'
+import About          from './pages/About'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword  from './pages/ResetPassword'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -56,7 +58,9 @@ export default function App() {
                 <Route path="/chart"         element={<PrivateRoute><Chart /></PrivateRoute>} />
                 <Route path="/account"       element={<PrivateRoute><Account /></PrivateRoute>} />
                 <Route path="/crisis"        element={<PrivateRoute><Crisis /></PrivateRoute>} />
-                <Route path="/about"         element={<About />} />
+                <Route path="/about"           element={<About />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password"  element={<ResetPassword />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </BrowserRouter>
