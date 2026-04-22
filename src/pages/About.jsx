@@ -46,10 +46,11 @@ export default function About() {
   }
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-5 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-5 pt-12 pb-8 flex flex-col flex-1">
       <AppHeader />
-      <div className="relative z-10 flex flex-col flex-1 fade-in overflow-y-auto no-scrollbar">
+      <div className="flex flex-col flex-1 fade-in overflow-y-auto no-scrollbar">
 
         {/* Header */}
         <div className="text-center mb-5">
@@ -114,6 +115,7 @@ export default function About() {
           className="w-full py-2.5 rounded-full text-white font-bold text-[14px] bg-white/20 border-2 border-white/40 active:scale-[1.02] transition-transform">
           ← {lang === 'fr' ? 'Retour' : 'Back'}
         </button>
+      </div>
       </div>
     </div>
   )

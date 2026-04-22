@@ -66,7 +66,7 @@ export default function Welcome() {
         ))}
       </div>
 
-      <div className="relative z-10 flex flex-col items-center text-center fade-in">
+      <div className="relative z-10 flex flex-col items-center text-center fade-in w-full max-w-[480px]">
         <h1 className="text-white font-extrabold text-[22px] leading-snug mb-3">
           {t('welcome')}<br />{t('appName')}
         </h1>

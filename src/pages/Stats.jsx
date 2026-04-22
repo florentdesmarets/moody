@@ -87,10 +87,11 @@ export default function Stats() {
     : `in ${t('months')[today.getMonth()]}`
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8">
       <AppHeader />
-      <div className="relative z-10 fade-in">
+      <div className="fade-in">
         <h1 className="text-white font-extrabold text-[18px] text-center">{t('statsTitle')}</h1>
         <p className="text-white/55 text-[11px] text-center mb-4 capitalize">{t('months')[today.getMonth()]} {today.getFullYear()}</p>
         <div className="flex gap-2 mb-2">
@@ -142,6 +143,7 @@ export default function Stats() {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

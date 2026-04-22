@@ -41,10 +41,11 @@ export default function Chart() {
   const monthEntries = Object.values(moodsMap)
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8">
       <AppHeader />
-      <div className="relative z-10 fade-in">
+      <div className="fade-in">
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-white font-extrabold text-[18px]">{t('chartTitle')}</h1>
           <div className="flex gap-1">
@@ -64,6 +65,7 @@ export default function Chart() {
         </div>
         <ChartCorrelation year={year} month={month} moodsMap={moodsMap} t={t} />
         <ChartTags monthEntries={monthEntries} t={t} month={month} year={year} />
+      </div>
       </div>
     </div>
   )

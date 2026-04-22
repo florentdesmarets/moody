@@ -13,10 +13,11 @@ export default function Journal() {
   const [selected, setSelected] = useState([])
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8">
       <AppHeader />
-      <div className="relative z-10 fade-in">
+      <div className="fade-in">
         <h1 className="text-white font-extrabold text-[21px] text-center mb-2">{t('listeningTitle')}</h1>
         <p className="text-[36px] text-center mb-3">{emoji}</p>
         <div className="flex items-center gap-2 mt-3">
@@ -48,6 +49,7 @@ export default function Journal() {
             )
           })}
         </div>
+      </div>
       </div>
     </div>
   )

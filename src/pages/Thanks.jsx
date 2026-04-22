@@ -35,12 +35,12 @@ export default function Thanks() {
   }, [])
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
-      <AppHeader />
       <Confetti active={confetti} />
-
-      <div className="relative z-10 flex flex-col flex-1 items-center justify-center text-center fade-in">
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8 flex flex-col flex-1">
+      <AppHeader />
+      <div className="flex flex-col flex-1 items-center justify-center text-center fade-in">
         <h1 className="text-white font-extrabold text-[21px] mb-2">{t('thanksTitle')}</h1>
 
         {milestone ? (
@@ -62,6 +62,7 @@ export default function Thanks() {
           className="px-6 py-2.5 rounded-full text-white font-bold text-[14px] bg-white/25 border-2 border-white/65 active:scale-[1.03] transition-transform">
           {t('seeCalendar')}
         </button>
+      </div>
       </div>
     </div>
   )

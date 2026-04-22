@@ -10,10 +10,11 @@ export default function MoodPositive() {
   const { level, emoji } = location.state ?? { level: 7, emoji: '😄' }
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8 flex flex-col flex-1">
       <AppHeader />
-      <div className="relative z-10 flex flex-col flex-1 items-center justify-center text-center fade-in">
+      <div className="flex flex-col flex-1 items-center justify-center text-center fade-in">
         <h1 className="text-white font-extrabold text-[21px] leading-snug mb-3">{t('tooDayHappy')}</h1>
         <span className="text-[52px] my-3">{emoji}</span>
         <p className="text-white/80 text-[13px] mb-1">{t('alwaysCase')}</p>
@@ -28,6 +29,7 @@ export default function MoodPositive() {
             {t('no')}
           </button>
         </div>
+      </div>
       </div>
     </div>
   )

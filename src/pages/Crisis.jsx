@@ -265,12 +265,12 @@ export default function Crisis() {
   ]
 
   return (
-    <div className="relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]"
+    <div className="relative overflow-hidden flex flex-col min-h-[100dvh]"
       style={{ background: 'linear-gradient(160deg, #1a0a0a 0%, #8B1A1A 50%, #C0392B 100%)' }}>
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8 flex flex-col flex-1">
       <AppHeader />
-
-      <div className="relative z-10 overflow-y-auto no-scrollbar flex-1">
+      <div className="overflow-y-auto no-scrollbar flex-1">
 
         {/* En-tête */}
         <div className="text-center mb-4 fade-in">
@@ -438,6 +438,7 @@ export default function Crisis() {
           style={{ background: 'rgba(255,255,255,0.07)' }}>
           ← {lang === 'fr' ? 'Retour' : 'Back'}
         </button>
+      </div>
       </div>
     </div>
   )

@@ -23,10 +23,11 @@ export default function Mood() {
   }
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8 flex flex-col flex-1">
       <AppHeader />
-      <div className="relative z-10 flex flex-col flex-1">
+      <div className="flex flex-col flex-1">
         <h1 className="text-white font-extrabold text-[21px] text-center leading-snug">
           {t('moodQuestion').split('\n').map((line, i) => <span key={i}>{line}{i === 0 && <br />}</span>)}
         </h1>
@@ -49,6 +50,7 @@ export default function Mood() {
             "{t('dailyQuotes')[new Date().getDay()]}"
           </p>
         </div>
+      </div>
       </div>
     </div>
   )

@@ -357,10 +357,11 @@ ${tagCorrelHTML}
   }
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8 flex flex-col flex-1">
       <AppHeader />
-      <div className="relative z-10 overflow-y-auto no-scrollbar flex-1 fade-in">
+      <div className="overflow-y-auto no-scrollbar flex-1 fade-in">
         <h1 className="text-white font-extrabold text-[18px] text-center mb-4">{t('accountTitle')}</h1>
         <div className="flex flex-col items-center mb-4">
           <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[32px] mb-2">
@@ -502,6 +503,7 @@ ${tagCorrelHTML}
           className="w-full py-2.5 rounded-full text-[13px] font-bold text-white bg-[rgba(255,80,80,0.25)] border-2 border-[rgba(255,120,120,0.6)] active:bg-[rgba(255,80,80,0.45)] transition-colors mb-4">
           {t('deleteAccount')}
         </button>
+      </div>
       </div>
 
       {showClearHistory && (

@@ -18,10 +18,11 @@ export default function Sleep() {
   }
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8 flex flex-col flex-1">
       <AppHeader />
-      <div className="relative z-10 flex flex-col flex-1 items-center justify-center fade-in">
+      <div className="flex flex-col flex-1 items-center justify-center fade-in">
         <span className="text-[64px] mb-4">😴</span>
         <h1 className="text-white font-extrabold text-[21px] text-center mb-1">{t('sleepQuestion')}</h1>
         <p className="text-white/70 text-[13px] text-center mb-8">{t('sleepSub')}</p>
@@ -44,6 +45,7 @@ export default function Sleep() {
           className="px-8 py-3 rounded-full text-white font-bold text-[14px] bg-white/25 border-2 border-white/65 active:scale-[1.03] transition-transform">
           {sommeil !== null ? t('continueBtn') : t('skipBtn')}
         </button>
+      </div>
       </div>
     </div>
   )

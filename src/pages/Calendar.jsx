@@ -47,10 +47,11 @@ export default function Calendar() {
   function getFatLabel(v)  { return fatOpts.find(o => o.value === v) }
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
+      <div className="relative z-10 w-full max-w-[560px] mx-auto px-6 pt-12 pb-8 flex flex-col flex-1">
       <AppHeader />
-      <div className="relative z-10 flex flex-col flex-1 fade-in">
+      <div className="flex flex-col flex-1 fade-in">
         <h1 className="text-white font-extrabold text-[18px] text-center mb-3">{t('calendarTitle')}</h1>
         <div className="flex items-center justify-between mb-3">
           <button onClick={prev} className="text-white text-[20px] px-3 py-1 rounded-lg bg-transparent border-none active:bg-white/20">‹</button>
@@ -115,6 +116,7 @@ export default function Calendar() {
           </>
         )}
       </div>
+      </div>
       <MoodModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -126,6 +128,7 @@ export default function Calendar() {
         initialNourriture={editDay?.mood?.nourriture}
         initialFatigue={editDay?.mood?.fatigue}
       />
+      </div>
     </div>
   )
 }

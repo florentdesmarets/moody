@@ -23,9 +23,9 @@ export default function Login() {
   }
 
   return (
-    <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-14 pb-10 min-h-[100dvh]">
+    <div className="bg-app relative overflow-hidden flex flex-col min-h-[100dvh]">
       <BgBlobs />
-      <div className="relative z-10 fade-in">
+      <div className="relative z-10 w-full max-w-[420px] mx-auto px-6 pt-14 pb-10 fade-in">
         <h1 className="text-white font-extrabold text-[22px] text-center mb-6">{t('login')}</h1>
         <input className="w-full bg-white/90 rounded-full px-4 py-2.5 text-[13px] text-[#555] outline-none mb-2 border-none focus:bg-white"
           type="email" placeholder={t('email')} value={email} onChange={e => setEmail(e.target.value)} />
