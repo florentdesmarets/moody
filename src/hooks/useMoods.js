@@ -120,14 +120,17 @@ export function useMoods() {
       }
     }
 
-    const positiveDaysCount  = data.filter(m => m.niveau >= 5).length
-    const commentCount       = data.filter(m => m.commentaire && m.commentaire.trim().length > 0).length
-    const longCommentCount   = data.filter(m => m.commentaire && m.commentaire.trim().length >= 50).length
-    const goodSleepCount     = data.filter(m => m.sommeil != null && m.sommeil >= 7).length
-    const wellFedCount       = data.filter(m => m.nourriture === 3).length
-    const notTiredCount      = data.filter(m => m.fatigue === 3).length
+    const commentCount     = data.filter(m => m.commentaire && m.commentaire.trim().length > 0).length
+    const longCommentCount = data.filter(m => m.commentaire && m.commentaire.trim().length >= 50).length
+    const goodSleepCount   = data.filter(m => m.sommeil != null && m.sommeil >= 7).length
+    const wellFedCount     = data.filter(m => m.nourriture === 3).length
+    const notTiredCount    = data.filter(m => m.fatigue === 3).length
+    // Courageux : a tracké même lors de jours difficiles (humeur ≤ 2)
+    const hardDaysCount    = data.filter(m => m.niveau <= 2).length
+    // Minutieux : entrée complète (humeur + sommeil + nourriture + fatigue)
+    const thoroughCount    = data.filter(m => m.niveau && m.sommeil != null && m.nourriture != null && m.fatigue != null).length
 
-    return { count, streak, positiveStreak, positiveDaysCount, commentCount, longCommentCount, goodSleepCount, wellFedCount, notTiredCount }
+    return { count, streak, commentCount, longCommentCount, goodSleepCount, wellFedCount, notTiredCount, hardDaysCount, thoroughCount }
   }, [user])
 
   return { fetchMonth, saveMood, deleteMood, getStats, fetchGlobalStats, loading }
