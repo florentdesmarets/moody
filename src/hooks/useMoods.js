@@ -28,7 +28,7 @@ export function useMoods() {
     return map
   }, [user])
 
-  const saveMood = useCallback(async ({ date, niveau, emoji, commentaire, sommeil }) => {
+  const saveMood = useCallback(async ({ date, niveau, emoji, commentaire, sommeil, nourriture, fatigue }) => {
     if (!user) return { error: 'Non connecté' }
     const { data, error } = await supabase
       .from('moods')
@@ -38,7 +38,9 @@ export function useMoods() {
         niveau,
         emoji,
         commentaire: commentaire || '',
-        sommeil: sommeil ?? null,
+        sommeil:     sommeil     ?? null,
+        nourriture:  nourriture  ?? null,
+        fatigue:     fatigue     ?? null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,date' })
       .select()
@@ -58,7 +60,7 @@ export function useMoods() {
 
   const getStats = useCallback((moodsMap) => {
     const entries = Object.values(moodsMap)
-    if (entries.length === 0) return { count: 0, avg: 0, positive: 0, topEmoji: '😐', avgSommeil: null }
+    if (entries.length === 0) return { count: 0, avg: 0, positive: 0, topEmoji: '😐', avgSommeil: null, avgNourriture: null, avgFatigue: null }
     const values = entries.map(m => m.niveau)
     const avg = values.reduce((a, b) => a + b, 0) / values.length
     const positive = values.filter(v => v >= 5).length
@@ -68,7 +70,11 @@ export function useMoods() {
     const topEmoji = Object.entries(freq).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '😐'
     const sleepValues = entries.map(m => m.sommeil).filter(v => v != null)
     const avgSommeil = sleepValues.length ? Math.round(sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length * 10) / 10 : null
-    return { count: values.length, avg, positive: positivePercent, topEmoji, avgSommeil }
+    const foodValues = entries.map(m => m.nourriture).filter(v => v != null)
+    const avgNourriture = foodValues.length ? Math.round(foodValues.reduce((a, b) => a + b, 0) / foodValues.length * 10) / 10 : null
+    const fatigueValues = entries.map(m => m.fatigue).filter(v => v != null)
+    const avgFatigue = fatigueValues.length ? Math.round(fatigueValues.reduce((a, b) => a + b, 0) / fatigueValues.length * 10) / 10 : null
+    return { count: values.length, avg, positive: positivePercent, topEmoji, avgSommeil, avgNourriture, avgFatigue }
   }, [])
 
   const fetchGlobalStats = useCallback(async () => {

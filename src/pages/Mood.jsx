@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AppHeader from '../components/AppHeader'
 import BgBlobs from '../components/BgBlobs'
 import EmojiPicker from '../components/EmojiPicker'
+import PWAInstallBanner from '../components/PWAInstallBanner'
 import { useLang } from '../context/LangContext'
 
 export default function Mood() {
@@ -23,6 +24,7 @@ export default function Mood() {
   }
 
   return (
+    <>
     <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
       <BgBlobs />
       <AppHeader />
@@ -51,5 +53,7 @@ export default function Mood() {
         </div>
       </div>
     </div>
+    <PWAInstallBanner />
+    </>
   )
 }

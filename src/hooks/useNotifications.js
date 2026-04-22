@@ -10,19 +10,23 @@ export function isNotificationGranted() {
 
 export function scheduleNotification(time, lang = 'fr') {
   if (!isNotificationGranted()) return
-  if (!navigator.serviceWorker.controller) return
-  const body = lang === 'fr'
-    ? 'Comment tu te sens aujourd\'hui ? 😊'
-    : 'How are you feeling today? 😊'
-  navigator.serviceWorker.controller.postMessage({
-    type: 'SCHEDULE_NOTIFICATION',
-    time,
-    title: 'MoodTracker',
-    body,
+  if (!('serviceWorker' in navigator)) return
+  const body = lang === 'en'
+    ? 'How are you feeling today? 😊'
+    : "Comment tu te sens aujourd'hui ? 😊"
+  navigator.serviceWorker.ready.then(reg => {
+    reg.active?.postMessage({
+      type: 'SCHEDULE_NOTIFICATION',
+      time,
+      title: 'MoodTracker',
+      body,
+    })
   })
 }
 
 export function cancelNotification() {
-  if (!navigator.serviceWorker.controller) return
-  navigator.serviceWorker.controller.postMessage({ type: 'CANCEL_NOTIFICATION' })
+  if (!('serviceWorker' in navigator)) return
+  navigator.serviceWorker.ready.then(reg => {
+    reg.active?.postMessage({ type: 'CANCEL_NOTIFICATION' })
+  })
 }

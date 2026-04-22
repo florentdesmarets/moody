@@ -127,10 +127,8 @@ export default function Account() {
     const entries = Object.values(data).sort((a, b) => a.date.localeCompare(b.date))
     const stats = getStats(data)
 
-    const MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-    const MOOD_LABELS = ['—','Très difficile','Difficile','Moyen bas','Neutre','Plutôt bien','Bien','Excellent']
+    const months     = t('months')
     const MOOD_COLORS = ['#ddd','#FF4F4F','#FF7A4F','#FFB347','#FFD700','#9ACD32','#4CAF50','#3DBF7F']
-    const monthName   = MONTH_NAMES[month]
     const pad = n => String(n).padStart(2, '0')
 
     const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -150,7 +148,7 @@ export default function Account() {
       return h ? `<rect x="${i * BAR_STEP}" y="${CHART_H - h}" width="${BAR_W}" height="${h}" fill="${MOOD_COLORS[e.niveau]}" rx="2" opacity="0.75"/>` : ''
     }).join('')
 
-    // Courbe sommeil — 4h→10h normalisé
+    // Courbe sommeil — 0h→12h normalisé
     const sleepPoints = []
     for (let i = 0; i < daysInMonth; i++) {
       const dateStr = `${year}-${pad(month+1)}-${pad(i+1)}`
@@ -158,7 +156,7 @@ export default function Account() {
       if (e?.sommeil != null) {
         sleepPoints.push({
           x: i * BAR_STEP + BAR_W / 2,
-          y: CHART_H - ((Math.min(Math.max(e.sommeil, 4), 10) - 4) / 6) * CHART_H,
+          y: CHART_H - (Math.min(Math.max(e.sommeil, 0), 12) / 12) * CHART_H,
           h: e.sommeil,
         })
       }
@@ -171,14 +169,42 @@ export default function Account() {
       `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.5" fill="white" stroke="#6366f1" stroke-width="1.5"/>`
     ).join('')
 
+    // Courbe fatigue — 1-3 normalisé
+    const fatiguePoints = []
+    for (let i = 0; i < daysInMonth; i++) {
+      const dateStr = `${year}-${pad(month+1)}-${pad(i+1)}`
+      const e = data[dateStr]
+      if (e?.fatigue != null) {
+        fatiguePoints.push({
+          x: i * BAR_STEP + BAR_W / 2,
+          y: CHART_H - ((e.fatigue - 1) / 2) * CHART_H,
+        })
+      }
+    }
+    const fatiguePath = fatiguePoints.length > 1
+      ? `<polyline points="${fatiguePoints.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="4 2" stroke-linejoin="round" stroke-linecap="round"/>`
+      : ''
+
+    const isEn = lang === 'en'
+    const MOOD_LABELS_LOC = isEn
+      ? ['—','Very hard','Hard','Below avg','Neutral','Pretty good','Good','Excellent']
+      : ['—','Très difficile','Difficile','Moyen bas','Neutre','Plutôt bien','Bien','Excellent']
+
     const tagCounts = {}
     entries.forEach(e => {
-      if (e.commentaire) e.commentaire.split(', ').forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1 })
+      if (e.commentaire) e.commentaire.split(', ').forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1 })
     })
     const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 10)
 
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>
-<title>Rapport MoodTracker — ${monthName} ${year}</title>
+    const FOOD_LABELS = isEn
+      ? { 3: '🍽️ Ate well', 2: '🥗 Ate a little', 1: "😔 Didn't eat" }
+      : { 3: '🍽️ Bien mangé', 2: '🥗 Peu mangé', 1: '😔 Pas mangé' }
+    const FAT_LABELS = isEn
+      ? { 3: '⚡ Not tired', 2: '😌 A little tired', 1: '😓 Very tired' }
+      : { 3: '⚡ Pas fatigué·e', 2: '😌 Un peu fatigué·e', 1: '😓 Très fatigué·e' }
+
+    const html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"/>
+<title>MoodTracker — ${months[month]} ${year}</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; padding: 36px; max-width: 780px; margin: auto; }
@@ -192,7 +218,7 @@ export default function Account() {
   .chart-wrap { background: #fff8f5; border-radius: 12px; padding: 16px 16px 10px; }
   svg { width: 100%; height: auto; display: block; }
   .axis { display: flex; justify-content: space-between; font-size: 10px; color: #ccc; margin-top: 4px; }
-  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .leg-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; align-items: center; }
   .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #777; }
   .dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
   .tags { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -201,44 +227,45 @@ export default function Account() {
   td { padding: 8px 6px; border-bottom: 1px solid #f5ede5; vertical-align: top; }
   td:first-child { color: #bbb; white-space: nowrap; width: 100px; }
   td:nth-child(2) { font-size: 18px; width: 30px; }
-  .sleep { color: #bbb; font-size: 11px; }
+  .meta { color: #bbb; font-size: 11px; }
   footer { text-align: center; color: #ddd; font-size: 11px; margin-top: 40px; }
   @media print { body { padding: 20px; } }
 </style></head><body>
 <h1>🩷 MoodTracker</h1>
-<p class="sub">Rapport mensuel — <strong>${monthName} ${year}</strong> &nbsp;·&nbsp; Patient·e : <strong>${profile?.prenom ?? ''}</strong> &nbsp;·&nbsp; Généré le ${today.toLocaleDateString('fr-FR')}</p>
+<p class="sub">${isEn ? 'Monthly report' : 'Rapport mensuel'} — <strong>${months[month]} ${year}</strong> &nbsp;·&nbsp; ${isEn ? 'Patient' : 'Patient·e'} : <strong>${profile?.prenom ?? ''}</strong> &nbsp;·&nbsp; ${isEn ? 'Generated on' : 'Généré le'} ${today.toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR')}</p>
 
-<h2>Résumé du mois</h2>
+<h2>${isEn ? 'Monthly summary' : 'Résumé du mois'}</h2>
 <div class="stats">
-  <div class="stat"><div class="stat-val">${stats.count}</div><div class="stat-lbl">Jours suivis</div></div>
-  <div class="stat"><div class="stat-val">${Math.round(stats.avg * 10) / 10}/7</div><div class="stat-lbl">Humeur moy.</div></div>
-  <div class="stat"><div class="stat-val">${stats.positive}%</div><div class="stat-lbl">Jours positifs</div></div>
-  <div class="stat"><div class="stat-val">${stats.avgSommeil != null ? stats.avgSommeil + 'h' : '—'}</div><div class="stat-lbl">Sommeil moy.</div></div>
+  <div class="stat"><div class="stat-val">${stats.count}</div><div class="stat-lbl">${isEn ? 'Days tracked' : 'Jours suivis'}</div></div>
+  <div class="stat"><div class="stat-val">${Math.round(stats.avg * 10) / 10}/7</div><div class="stat-lbl">${isEn ? 'Avg mood' : 'Humeur moy.'}</div></div>
+  <div class="stat"><div class="stat-val">${stats.positive}%</div><div class="stat-lbl">${isEn ? 'Positive days' : 'Jours positifs'}</div></div>
+  <div class="stat"><div class="stat-val">${stats.avgSommeil != null ? stats.avgSommeil + 'h' : '—'}</div><div class="stat-lbl">${isEn ? 'Avg sleep' : 'Sommeil moy.'}</div></div>
 </div>
 
-<h2>Humeur &amp; sommeil croisés — ${monthName} ${year}</h2>
+<h2>${isEn ? 'Mood & sleep — ' : 'Humeur &amp; sommeil — '}${months[month]} ${year}</h2>
 <div class="chart-wrap">
-  <svg viewBox="0 0 ${CHART_W} ${CHART_H}" style="width:100%;height:auto;display:block;">${gridLines}${bars}${sleepPath}${sleepDots}</svg>
-  <div class="axis"><span>1er</span><span>${Math.round(daysInMonth/2)}</span><span>${daysInMonth}</span></div>
-  <div style="display:flex;gap:20px;align-items:center;margin-top:10px;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#777;">
-      <svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#6366f1" stroke-width="1.8"/><circle cx="10" cy="5" r="2.5" fill="white" stroke="#6366f1" stroke-width="1.5"/></svg>
-      Sommeil (4h → 10h)
+  <svg viewBox="0 0 ${CHART_W} ${CHART_H}" style="width:100%;height:auto;display:block;">${gridLines}${bars}${sleepPath}${sleepDots}${fatiguePath}</svg>
+  <div class="axis"><span>${isEn ? '1st' : '1er'}</span><span>${Math.round(daysInMonth/2)}</span><span>${daysInMonth}</span></div>
+  <div class="leg-row">
+    <div class="leg"><svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#6366f1" stroke-width="1.8"/><circle cx="10" cy="5" r="2.5" fill="white" stroke="#6366f1" stroke-width="1.5"/></svg>${isEn ? 'Sleep (0–12h)' : 'Sommeil (0–12h)'}</div>
+    <div class="leg"><svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="4 2"/></svg>${isEn ? 'Energy' : 'Énergie'}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      ${MOOD_LABELS_LOC.slice(1).map((l,i) => `<div class="leg"><div class="dot" style="background:${MOOD_COLORS[i+1]}"></div>${l}</div>`).join('')}
     </div>
-    <div class="legend">${MOOD_LABELS.slice(1).map((l,i) => `<div class="leg"><div class="dot" style="background:${MOOD_COLORS[i+1]}"></div>${l}</div>`).join('')}</div>
   </div>
 </div>
 
-${topTags.length ? `<h2>Activités &amp; ressentis fréquents</h2><div class="tags">${topTags.map(([t,c]) => `<span class="tag">${t} <strong>(${c})</strong></span>`).join('')}</div>` : ''}
+${topTags.length ? `<h2>${isEn ? 'Frequent activities &amp; feelings' : 'Activités &amp; ressentis fréquents'}</h2><div class="tags">${topTags.map(([tag,c]) => `<span class="tag">${tag} <strong>(${c})</strong></span>`).join('')}</div>` : ''}
 
-<h2>Historique détaillé</h2>
+<h2>${isEn ? 'Detailed log' : 'Historique détaillé'}</h2>
 <table>${entries.map(e => `<tr>
   <td>${e.date}</td>
   <td>${e.emoji}</td>
-  <td><strong>${MOOD_LABELS[e.niveau]}</strong>${e.commentaire ? ' — ' + e.commentaire : ''}<br/>${e.sommeil != null ? `<span class="sleep">😴 ${e.sommeil}h de sommeil</span>` : ''}</td>
+  <td><strong>${MOOD_LABELS_LOC[e.niveau]}</strong>${e.commentaire ? ' — ' + e.commentaire : ''}<br/>
+  <span class="meta">${e.sommeil != null ? `😴 ${e.sommeil}h` : ''}${e.nourriture != null ? ` · ${FOOD_LABELS[e.nourriture]}` : ''}${e.fatigue != null ? ` · ${FAT_LABELS[e.fatigue]}` : ''}</span></td>
 </tr>`).join('')}</table>
 
-<footer>Généré par MoodTracker · Application de suivi émotionnel · Fait avec ❤️ par Florent</footer>
+<footer>${isEn ? 'Generated by MoodTracker · Emotional tracking app · Made with ❤️ by Florent' : 'Généré par MoodTracker · Application de suivi émotionnel · Fait avec ❤️ par Florent'}</footer>
 </body></html>`
 
     const w = window.open('', '_blank')
@@ -326,22 +353,25 @@ ${topTags.length ? `<h2>Activités &amp; ressentis fréquents</h2><div class="ta
 
         <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('themeTitle')}</p>
         <div className="grid grid-cols-4 gap-2 mb-3">
-          {themes.map(th => (
-            <button key={th.id} onClick={() => changeTheme(th.id, id => handleSave('theme', id))}
-              className="rounded-2xl h-14 flex items-end pb-1.5 px-1.5 relative overflow-hidden border-2 transition-all"
-              style={{
-                background: th.gradient,
-                borderColor: themeId === th.id ? 'white' : 'transparent',
-                transform: themeId === th.id ? 'scale(1.06)' : 'scale(1)',
-              }}>
-              <span className="text-[9px] text-white font-bold leading-tight drop-shadow">
-                {th.label.split(' ').slice(1).join(' ')}
-              </span>
-              {themeId === th.id && (
-                <span className="absolute top-1 right-1 text-[10px]">✓</span>
-              )}
-            </button>
-          ))}
+          {themes.map(th => {
+            const themeLabel = lang === 'en' ? (th.labelEn ?? th.label) : th.label
+            return (
+              <button key={th.id} onClick={() => changeTheme(th.id, id => handleSave('theme', id))}
+                className="rounded-2xl h-14 flex items-end pb-1.5 px-1.5 relative overflow-hidden border-2 transition-all"
+                style={{
+                  background: th.gradient,
+                  borderColor: themeId === th.id ? 'white' : 'transparent',
+                  transform: themeId === th.id ? 'scale(1.06)' : 'scale(1)',
+                }}>
+                <span className="text-[9px] text-white font-bold leading-tight drop-shadow">
+                  {themeLabel.split(' ').slice(1).join(' ')}
+                </span>
+                {themeId === th.id && (
+                  <span className="absolute top-1 right-1 text-[10px]">✓</span>
+                )}
+              </button>
+            )
+          })}
         </div>
 
         <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('badgesTitle')}</p>

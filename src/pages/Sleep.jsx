@@ -4,7 +4,7 @@ import AppHeader from '../components/AppHeader'
 import BgBlobs from '../components/BgBlobs'
 import { useLang } from '../context/LangContext'
 
-const HOURS = [4, 5, 6, 7, 8, 9, 10]
+const HOURS = [0,1,2,3,4,5,6,7,8,9,10,11,12]
 
 export default function Sleep() {
   const navigate = useNavigate()
@@ -14,7 +14,7 @@ export default function Sleep() {
   const [sommeil, setSommeil] = useState(null)
 
   function handleNext() {
-    navigate('/thanks', { state: { ...state, sommeil } })
+    navigate('/food', { state: { ...state, sommeil } })
   }
 
   return (
@@ -42,7 +42,7 @@ export default function Sleep() {
 
         <button onClick={handleNext}
           className="px-8 py-3 rounded-full text-white font-bold text-[14px] bg-white/25 border-2 border-white/65 active:scale-[1.03] transition-transform">
-          {sommeil ? t('continueBtn') : t('skipBtn')}
+          {sommeil !== null ? t('continueBtn') : t('skipBtn')}
         </button>
       </div>
     </div>

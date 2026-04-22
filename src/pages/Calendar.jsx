@@ -30,8 +30,8 @@ export default function Calendar() {
 
   function handleDayClick(d, dateStr, mood) { setEditDay({ d, dateStr, mood }); setModalOpen(true) }
 
-  async function handleSave({ niveau, emoji, commentaire, sommeil }) {
-    await saveMood({ date: editDay.dateStr, niveau, emoji, commentaire, sommeil })
+  async function handleSave({ niveau, emoji, commentaire, sommeil, nourriture, fatigue }) {
+    await saveMood({ date: editDay.dateStr, niveau, emoji, commentaire, sommeil, nourriture, fatigue })
     setModalOpen(false)
     const fresh = await fetchMonth(year, month)
     setMoodsMap(fresh)
@@ -39,7 +39,12 @@ export default function Calendar() {
   }
 
   const months   = t('months')
+  const foodOpts = t('foodOptions')
+  const fatOpts  = t('fatigueOptions')
   const dayLabel = editDay ? `${months[month]} ${editDay.d} ${year}` : ''
+
+  function getFoodLabel(v) { return foodOpts.find(o => o.value === v) }
+  function getFatLabel(v)  { return fatOpts.find(o => o.value === v) }
 
   return (
     <div className="bg-app relative overflow-hidden flex flex-col px-6 pt-12 pb-8 min-h-[100dvh]">
@@ -94,9 +99,13 @@ export default function Calendar() {
                       <span className="text-[20px]">{editDay.mood.emoji}</span>
                       <span className="text-[12px] text-[#666]">{editDay.mood.commentaire || <em className="text-[#bbb]">{t('noComment')}</em>}</span>
                     </div>
-                    {editDay.mood.sommeil != null && (
-                      <span className="text-[11px] text-[#aaa]">😴 {editDay.mood.sommeil}h {t('sleepLabel').toLowerCase()}</span>
-                    )}
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                      {editDay.mood.sommeil != null && (
+                        <span className="text-[11px] text-[#aaa]">😴 {editDay.mood.sommeil}h</span>
+                      )}
+                      {editDay.mood.nourriture != null && (() => { const f = getFoodLabel(editDay.mood.nourriture); return f ? <span className="text-[11px] text-[#aaa]">{f.emoji} {f.label}</span> : null })()}
+                      {editDay.mood.fatigue != null && (() => { const f = getFatLabel(editDay.mood.fatigue); return f ? <span className="text-[11px] text-[#aaa]">{f.emoji} {f.label}</span> : null })()}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-[12px] text-[#bbb] italic">{months[month]} {editDay.d} — {t('notLogged')}</p>
@@ -106,8 +115,17 @@ export default function Calendar() {
           </>
         )}
       </div>
-      <MoodModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave}
-        dayLabel={dayLabel} initialMood={editDay?.mood?.niveau} initialComment={editDay?.mood?.commentaire} initialSommeil={editDay?.mood?.sommeil} />
+      <MoodModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+        dayLabel={dayLabel}
+        initialMood={editDay?.mood?.niveau}
+        initialComment={editDay?.mood?.commentaire}
+        initialSommeil={editDay?.mood?.sommeil}
+        initialNourriture={editDay?.mood?.nourriture}
+        initialFatigue={editDay?.mood?.fatigue}
+      />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getTheme } from '../lib/themes'
+import { scheduleNotification, isNotificationGranted } from '../hooks/useNotifications'
 
 function applyThemeCSSVars(theme) {
   const r = document.documentElement
@@ -28,6 +29,10 @@ export function AuthProvider({ children }) {
     if (data?.theme) {
       applyThemeCSSVars(getTheme(data.theme))
       localStorage.setItem('theme', data.theme)
+    }
+    // Replanifie le rappel à chaque ouverture de l'app
+    if (data?.notif_active && isNotificationGranted()) {
+      scheduleNotification(data.reminder_time ?? '20:00', data.langue ?? 'fr')
     }
   }
 

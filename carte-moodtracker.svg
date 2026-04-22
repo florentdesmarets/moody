@@ -1,0 +1,29 @@
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='1020' height='567'>
+  <defs>
+    <linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#FFD07A'/>
+      <stop offset='55%' stop-color='#FF8C5A'/>
+      <stop offset='100%' stop-color='#FF6B5A'/>
+    </linearGradient>
+    <clipPath id='card'>
+      <rect width='1020' height='567' rx='60' ry='60'/>
+    </clipPath>
+  </defs>
+  <rect width='1020' height='567' rx='60' ry='60' fill='url(#g)'/>
+  <g clip-path='url(#card)'>
+    <circle cx='850' cy='-60' r='280' fill='rgba(255,255,255,0.10)'/>
+    <circle cx='920' cy='100' r='180' fill='rgba(255,255,255,0.07)'/>
+    <circle cx='80' cy='540' r='200' fill='rgba(255,255,255,0.07)'/>
+  </g>
+  <!-- Emoji -->
+  <text x='80' y='230' font-size='110' font-family='Segoe UI Emoji,Apple Color Emoji,sans-serif'>🩷</text>
+  <!-- Titre -->
+  <text x='210' y='190' font-size='90' font-weight='800' fill='white' font-family='Segoe UI,system-ui,sans-serif' letter-spacing='-2'>MoodTracker</text>
+  <!-- Tagline -->
+  <text x='213' y='240' font-size='32' fill='rgba(255,255,255,0.85)' font-family='Segoe UI,system-ui,sans-serif'>Suivi émotionnel quotidien · Gratuit · PWA</text>
+  <!-- URL -->
+  <text x='80' y='490' font-size='30' font-weight='600' fill='rgba(255,255,255,0.90)' font-family='Segoe UI,system-ui,sans-serif'>florentdesmarets.github.io/moodtracker</text>
+  <!-- QR fond blanc -->
+  <rect x='808' y='370' width='132' height='132' rx='16' fill='white'/>
+  <image href='data:image/png;base64,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' x='814' y='376' width='120' height='120'/>
+</svg>

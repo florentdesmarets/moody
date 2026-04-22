@@ -28,21 +28,41 @@ export default function CalendarGrid({ year, month, moodsMap, onDayClick }) {
   const pad    = (n) => String(n).padStart(2, '0')
   const cells  = []
 
+  // Normalize today to midnight for accurate comparison
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
   for (let i = 0; i < offset; i++) cells.push(<div key={`e${i}`} />)
 
   for (let d = 1; d <= total; d++) {
     const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`
     const mood    = moodsMap[dateStr]
-    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d
+    const cellDate = new Date(year, month, d)
+    const isToday  = cellDate.getTime() === todayMidnight.getTime()
+    const isFuture = cellDate > todayMidnight
+
     cells.push(
-      <button
-        key={d}
-        onClick={() => onDayClick(d, dateStr, mood)}
-        style={{ background: moodColor(mood?.niveau) ?? 'rgba(255,255,255,0.15)' }}
-        className={`aspect-square rounded-lg text-[10px] font-bold flex items-center justify-center text-white cursor-pointer transition-all duration-150 active:scale-110 border-none ${isToday ? 'outline outline-2 outline-white' : ''}`}
-      >
-        {d}
-      </button>
+      isFuture ? (
+        // Future days: non-interactive, greyed out
+        <div
+          key={d}
+          className="aspect-square rounded-lg text-[10px] font-bold flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.25)' }}
+        >
+          {d}
+        </div>
+      ) : (
+        <button
+          key={d}
+          onClick={() => onDayClick(d, dateStr, mood)}
+          style={{
+            background: moodColor(mood?.niveau) ?? 'rgba(255,255,255,0.15)',
+            boxShadow: '0 0 0 1.5px rgba(255,255,255,0.18)',
+          }}
+          className={`aspect-square rounded-lg text-[10px] font-bold flex items-center justify-center text-white cursor-pointer transition-all duration-150 active:scale-110 border-none ${isToday ? 'outline outline-2 outline-white' : ''}`}
+        >
+          {d}
+        </button>
+      )
     )
   }
 

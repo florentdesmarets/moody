@@ -9,7 +9,9 @@
       "Bash(git -C \"C:/Users/Florent/OneDrive/Bureau/dev/MoodTracker/MoodTrackerApp/moodtracker\" worktree remove --force \"C:/Users/Florent/OneDrive/Bureau/dev/MoodTracker/MoodTrackerApp/moodtracker/.claude/worktrees/focused-kare-e6b9ae\")",
       "Read(//c/Users/Florent/OneDrive/Bureau/dev/MoodTracker/MoodTrackerApp/moodtracker/**)",
       "Bash(npm install *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npm run *)"
     ]
   }
 }
