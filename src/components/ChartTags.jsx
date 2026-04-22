@@ -5,14 +5,19 @@ const tagsFR = translations.fr.tags
 const tagsEN = translations.en.tags
 const EMOJIS = ['😭','😔','😕','😐','🙂','😊','😄']
 
-// Activités de réconfort : corrèlent avec les jours difficiles car utilisées
-// EN RÉPONSE à la difficulté, pas comme cause. Évite l'interprétation trompeuse.
-// Indices correspondant à la liste de tags (FR = EN = même ordre)
+// États émotionnels/conséquences : exclus de l'analyse — ce sont des symptômes,
+// pas des activités indépendantes. Les montrer fausserait toute l'analyse.
+const EXCLUDE_INDICES = new Set([
+   2, // Mal dormi·e / Slept badly  → conséquence, pas cause
+  12, // Pleuré·e / Cried           → état émotionnel
+  13, // Anxieux·se / Felt anxious  → état émotionnel
+  14, // Fatigué·e / Felt tired     → état/conséquence
+])
+
+// Activités de réconfort : choisies EN RÉPONSE à un jour difficile, pas comme cause.
+// Affichées sans score négatif, avec un message contextualisé.
 const COPING_INDICES = new Set([
   11, // Temps pour moi / Time for myself
-  12, // Pleuré·e / Cried
-  13, // Anxieux·se / Felt anxious
-  14, // Fatigué·e / Felt tired
   16, // Médité·e / Meditated
   17, // Lu un livre / Read a book
   18, // Écouté de la musique / Listened to music
@@ -99,6 +104,24 @@ function TagRow({ item, maxImpact, lang }) {
   )
 }
 
+// Affichage neutre pour les activités de réconfort — pas de score négatif
+function ComfortRow({ item, lang }) {
+  const theseLabel  = lang === 'fr' ? 'Ces jours-là' : 'On those days'
+  const avgLabel    = lang === 'fr' ? 'humeur moy.' : 'avg mood'
+  const timesLabel  = lang === 'fr' ? 'fois ce mois' : 'times this month'
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex-1 min-w-0">
+        <span className="text-white text-[11px] font-bold leading-tight block truncate">{item.label}</span>
+        <span className="text-white/45 text-[9.5px]">
+          {theseLabel} : {moodEmoji(item.avgWith)} <strong className="text-white/65">{item.avgWith.toFixed(1)}/7</strong> {avgLabel} · {item.count} {timesLabel}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export default function ChartTags({ monthEntries, t, month, year }) {
   const lang = t('langValue').startsWith('F') ? 'fr' : 'en'
 
@@ -106,6 +129,9 @@ export default function ChartTags({ monthEntries, t, month, year }) {
     if (!monthEntries || monthEntries.length < 3) return null
 
     const results = tagsFR.map((_, idx) => {
+      // Exclure les états émotionnels — ce sont des symptômes, pas des activités
+      if (EXCLUDE_INDICES.has(idx)) return null
+
       const withTag    = monthEntries.filter(m => hasTag(m.commentaire, idx))
       const withoutTag = monthEntries.filter(m => !hasTag(m.commentaire, idx))
 
@@ -199,7 +225,7 @@ export default function ChartTags({ monthEntries, t, month, year }) {
         </div>
       )}
 
-      {/* Section réconfort — corrélées mais non causales */}
+      {/* Section réconfort — affichage positif, sans score négatif */}
       {comfort.length > 0 && (
         <details className="group mb-3" open={drains.length === 0}>
           <summary className="cursor-pointer list-none flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-widest select-none mb-1" style={{ color: '#c4b5fd' }}>
@@ -208,9 +234,11 @@ export default function ChartTags({ monthEntries, t, month, year }) {
             🤗 {comfortTitle}
           </summary>
           <p className="text-white/40 text-[9px] leading-relaxed mb-3 mt-1">{comfortNote}</p>
-          {[...comfort].reverse().map(item => (
-            <TagRow key={item.idx} item={item} maxImpact={maxImpact} lang={lang} />
-          ))}
+          <div className="flex flex-col gap-3">
+            {[...comfort].reverse().map(item => (
+              <ComfortRow key={item.idx} item={item} lang={lang} />
+            ))}
+          </div>
         </details>
       )}
 
