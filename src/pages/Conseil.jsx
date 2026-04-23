@@ -6,6 +6,7 @@ import { useLang } from '../context/LangContext'
 import { useAuth } from '../context/AuthContext'
 import { getAvatar } from '../lib/badges'
 import { useMoods } from '../hooks/useMoods'
+import { getMeditationsForTopic } from '../lib/meditations'
 
 // ─── Avatar du bot : logo de l'app ───────────────────────────────────────────
 const BOT_AVATAR = '/icons/apple-touch-icon.png'
@@ -923,7 +924,38 @@ function CrisisCard({ lang, onCrisis }) {
   )
 }
 
-function BotMessage({ text, cards, crisis, followUp, lang, onCrisis }) {
+// ─── Teaser méditations ────────────────────────────────────────────────────────
+function MeditationTeaser({ topic, lang, onNavigate }) {
+  const meds = getMeditationsForTopic(topic).slice(0, 2)
+  if (!meds.length) return null
+  return (
+    <div className="bg-white/15 rounded-2xl px-4 py-3 border border-white/30 mb-2">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[17px]">🎧</span>
+        <p className="text-white font-bold text-[12px]">
+          {lang === 'fr' ? 'Méditations guidées' : 'Guided meditations'}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1.5 mb-2.5">
+        {meds.map(m => (
+          <div key={m.id} className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
+            <span className="text-[18px]">{m.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-semibold text-[11px]">{m.title[lang] ?? m.title.fr}</p>
+              <p className="text-white/55 text-[9px]">{m.duration}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={onNavigate}
+        className="w-full py-2 rounded-xl bg-white/20 border border-white/40 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
+        ▶ {lang === 'fr' ? 'Ouvrir les méditations' : 'Open meditations'}
+      </button>
+    </div>
+  )
+}
+
+function BotMessage({ text, cards, crisis, followUp, meditationTopic, lang, onCrisis, onNavigate }) {
   return (
     <div className="flex gap-2 mb-3 items-start">
       <BotAvatar />
@@ -935,6 +967,7 @@ function BotMessage({ text, cards, crisis, followUp, lang, onCrisis }) {
         )}
         {crisis && <CrisisCard lang={lang} onCrisis={onCrisis} />}
         {cards && cards.map((c, i) => <AdviceCard key={i} {...c} />)}
+        {meditationTopic && <MeditationTeaser topic={meditationTopic} lang={lang} onNavigate={onNavigate} />}
         {followUp && (
           <p className="text-white/65 text-[11px] leading-relaxed mt-1 bg-white/10 rounded-2xl rounded-tl-sm px-3 py-2">
             {followUp}
@@ -1075,11 +1108,13 @@ export default function Conseil() {
     const topic      = detectTopic(text, lang)
     const adviceData = ADVICES[lang] ?? ADVICES.fr
     const cards      = adviceData[topic] ?? adviceData.default
+    const MEDITATION_TOPICS = ['stress', 'sommeil', 'tristesse', 'burnout', 'corps']
+    const meditationTopic = MEDITATION_TOPICS.includes(topic) ? topic : null
 
     setMessages(prev => [
       ...prev,
       { type: 'user', text },
-      { type: 'bot', cards, followUp: FOLLOW_UP[lang] ?? FOLLOW_UP.fr },
+      { type: 'bot', cards, followUp: FOLLOW_UP[lang] ?? FOLLOW_UP.fr, meditationTopic },
     ])
     setInput('')
   }
@@ -1127,8 +1162,10 @@ export default function Conseil() {
                   cards={msg.cards}
                   crisis={msg.crisis}
                   followUp={i === messages.length - 1 ? msg.followUp : null}
+                  meditationTopic={i === messages.length - 1 ? msg.meditationTopic : null}
                   lang={lang}
                   onCrisis={() => navigate('/crisis')}
+                  onNavigate={() => navigate('/meditation')}
                 />
           ))}
           <div ref={bottomRef} />
