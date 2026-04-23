@@ -262,7 +262,6 @@ export default function Conseil() {
   const userBadge = getAvatar(profile?.avatar ?? 'starter')
   const [messages,  setMessages]  = useState([{ type: 'bot', text: INTRO[lang] ?? INTRO.fr }])
   const [input,     setInput]     = useState('')
-  const [showChips, setShowChips] = useState(true)
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
 
@@ -272,7 +271,6 @@ export default function Conseil() {
 
   function sendMessage(text) {
     if (!text.trim()) return
-    setShowChips(false)
 
     if (isCrisis(text, lang)) {
       setMessages(prev => [
@@ -332,17 +330,15 @@ export default function Conseil() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Quick chips (seulement au départ) */}
-        {showChips && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {(QUICK_CHIPS[lang] ?? QUICK_CHIPS.fr).map((chip, i) => (
-              <button key={i} onClick={() => { sendMessage(chip); inputRef.current?.focus() }}
-                className="text-[11px] font-semibold text-white/90 bg-white/18 border border-white/35 rounded-full px-3 py-1.5 transition-all active:scale-95">
-                {chip}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Quick chips — toujours visibles pour cumuler les sujets */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {(QUICK_CHIPS[lang] ?? QUICK_CHIPS.fr).map((chip, i) => (
+            <button key={i} onClick={() => { sendMessage(chip); inputRef.current?.focus() }}
+              className="text-[11px] font-semibold text-white/90 bg-white/18 border border-white/35 rounded-full px-3 py-1.5 transition-all active:scale-95">
+              {chip}
+            </button>
+          ))}
+        </div>
 
         {/* Input */}
         <div className="pb-8 pt-1">
