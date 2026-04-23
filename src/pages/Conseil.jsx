@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import AppHeader from '../components/AppHeader'
 import BgBlobs from '../components/BgBlobs'
 import { useLang } from '../context/LangContext'
+import { useAuth } from '../context/AuthContext'
+import { getAvatar } from '../lib/badges'
 
 // ─── Avatar du bot : logo de l'app ───────────────────────────────────────────
 const BOT_AVATAR = '/icons/apple-touch-icon.png'
@@ -235,11 +237,14 @@ function BotMessage({ text, cards, crisis, followUp, lang, onCrisis }) {
   )
 }
 
-function UserMessage({ text }) {
+function UserMessage({ text, badge }) {
   return (
-    <div className="flex justify-end mb-3">
-      <div className="bg-white/90 text-[#FF7040] font-semibold text-[12px] rounded-2xl rounded-tr-sm px-4 py-2 max-w-[78%]">
+    <div className="flex justify-end items-end gap-2 mb-3">
+      <div className="bg-white/90 text-[#FF7040] font-semibold text-[12px] rounded-2xl rounded-tr-sm px-4 py-2 max-w-[72%]">
         {text}
+      </div>
+      <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-[17px] flex-shrink-0">
+        {badge}
       </div>
     </div>
   )
@@ -249,6 +254,8 @@ function UserMessage({ text }) {
 export default function Conseil() {
   const { lang } = useLang()
   const navigate  = useNavigate()
+  const { profile } = useAuth()
+  const userBadge = getAvatar(profile?.avatar ?? 'starter')
   const [messages,  setMessages]  = useState([{ type: 'bot', text: INTRO[lang] ?? INTRO.fr }])
   const [input,     setInput]     = useState('')
   const [showChips, setShowChips] = useState(true)
@@ -307,7 +314,7 @@ export default function Conseil() {
         <div className="flex-1 overflow-y-auto no-scrollbar pb-3">
           {messages.map((msg, i) => (
             msg.type === 'user'
-              ? <UserMessage key={i} text={msg.text} />
+              ? <UserMessage key={i} text={msg.text} badge={userBadge} />
               : <BotMessage
                   key={i}
                   text={msg.text}
