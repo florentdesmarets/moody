@@ -924,18 +924,44 @@ function CrisisCard({ lang, onCrisis }) {
   )
 }
 
+// ─── Prompt proactif oui / non ────────────────────────────────────────────────
+function ProactivePrompt({ text, lang, onYes, onNo }) {
+  const [answered, setAnswered] = useState(false)
+  if (answered) return null
+  return (
+    <div className="flex gap-2 mb-3 items-start">
+      <BotAvatar />
+      <div className="flex-1 min-w-0">
+        <p className="text-white/90 text-[12px] leading-relaxed mb-2 bg-white/15 rounded-2xl rounded-tl-sm px-3 py-2">
+          {text}
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setAnswered(true); onYes() }}
+            className="flex-1 py-2 rounded-xl bg-white/25 border border-white/50 text-white font-bold text-[12px] active:scale-95 transition-transform">
+            👍 {lang === 'fr' ? 'Oui, montre-moi' : 'Yes, show me'}
+          </button>
+          <button
+            onClick={() => { setAnswered(true); onNo() }}
+            className="flex-1 py-2 rounded-xl bg-white/10 border border-white/20 text-white/55 font-semibold text-[12px] active:scale-95 transition-transform">
+            {lang === 'fr' ? 'Non merci' : 'No thanks'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Teaser méditations ────────────────────────────────────────────────────────
 function MeditationTeaser({ topic, lang, onNavigate }) {
   const meds = getMeditationsForTopic(topic).slice(0, 2)
   if (!meds.length) return null
+  const intro = lang === 'fr'
+    ? `🎧 J'ai aussi des méditations guidées qui pourraient t'aider :`
+    : `🎧 I also have guided meditations that might help:`
   return (
-    <div className="bg-white/15 rounded-2xl px-4 py-3 border border-white/30 mb-2">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[17px]">🎧</span>
-        <p className="text-white font-bold text-[12px]">
-          {lang === 'fr' ? 'Méditations guidées' : 'Guided meditations'}
-        </p>
-      </div>
+    <div className="mt-1 mb-2 bg-white/15 rounded-2xl rounded-tl-sm px-4 py-3 border border-white/25">
+      <p className="text-white/90 text-[12px] font-semibold mb-2">{intro}</p>
       <div className="flex flex-col gap-1.5 mb-2.5">
         {meds.map(m => (
           <div key={m.id} className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
@@ -948,8 +974,8 @@ function MeditationTeaser({ topic, lang, onNavigate }) {
         ))}
       </div>
       <button onClick={onNavigate}
-        className="w-full py-2 rounded-xl bg-white/20 border border-white/40 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
-        ▶ {lang === 'fr' ? 'Ouvrir les méditations' : 'Open meditations'}
+        className="w-full py-2 rounded-xl bg-white text-[#FF7040] font-bold text-[11px] flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
+        ▶ {lang === 'fr' ? 'Accéder aux méditations' : 'Go to meditations'}
       </button>
     </div>
   )
@@ -1079,9 +1105,15 @@ export default function Conseil() {
           ? `J'ai vu que tu te sentais ${tagList} aujourd'hui 💙 Voici des fiches adaptées pour chaque ressenti.`
           : `I noticed you were feeling ${tagList} today 💙 Here are cards tailored to each feeling.`
 
+        // On demande confirmation avant d'afficher les fiches → évite le flood
         setMessages(prev => [
           ...prev,
-          { type: 'bot', text: greeting, cards },
+          {
+            type:         'proactive',
+            text:         greeting,
+            pendingCards: cards,
+            pendingTopic: foundTopic,
+          },
         ])
       } catch (_) { /* silencieux si pas de données */ }
     }
@@ -1153,21 +1185,51 @@ export default function Conseil() {
 
         {/* Zone de chat */}
         <div className="flex-1 overflow-y-auto no-scrollbar pb-3">
-          {messages.map((msg, i) => (
-            msg.type === 'user'
-              ? <UserMessage key={i} text={msg.text} badge={userBadge} />
-              : <BotMessage
+          {messages.map((msg, i) => {
+            if (msg.type === 'user') {
+              return <UserMessage key={i} text={msg.text} badge={userBadge} />
+            }
+            if (msg.type === 'proactive') {
+              const MEDITATION_TOPICS = ['stress', 'sommeil', 'tristesse', 'burnout', 'corps']
+              return (
+                <ProactivePrompt
                   key={i}
                   text={msg.text}
-                  cards={msg.cards}
-                  crisis={msg.crisis}
-                  followUp={i === messages.length - 1 ? msg.followUp : null}
-                  meditationTopic={i === messages.length - 1 ? msg.meditationTopic : null}
                   lang={lang}
-                  onCrisis={() => navigate('/crisis')}
-                  onNavigate={() => navigate('/meditation')}
+                  onYes={() => setMessages(prev => prev.map((m, idx) =>
+                    idx !== i ? m : {
+                      type: 'bot',
+                      text: msg.text,
+                      cards: msg.pendingCards,
+                      meditationTopic: MEDITATION_TOPICS.includes(msg.pendingTopic) ? msg.pendingTopic : null,
+                      followUp: FOLLOW_UP[lang] ?? FOLLOW_UP.fr,
+                    }
+                  ))}
+                  onNo={() => setMessages(prev => prev.map((m, idx) =>
+                    idx !== i ? m : {
+                      type: 'bot',
+                      text: lang === 'fr'
+                        ? 'Pas de souci 💙 Je suis là si tu veux parler ou choisir un sujet ci-dessous.'
+                        : 'No worries 💙 I\'m here if you want to talk or choose a topic below.',
+                    }
+                  ))}
                 />
-          ))}
+              )
+            }
+            return (
+              <BotMessage
+                key={i}
+                text={msg.text}
+                cards={msg.cards}
+                crisis={msg.crisis}
+                followUp={i === messages.length - 1 ? msg.followUp : null}
+                meditationTopic={i === messages.length - 1 ? msg.meditationTopic : null}
+                lang={lang}
+                onCrisis={() => navigate('/crisis')}
+                onNavigate={() => navigate('/meditation')}
+              />
+            )
+          })}
           <div ref={bottomRef} />
         </div>
 
