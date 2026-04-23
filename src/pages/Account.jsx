@@ -519,28 +519,28 @@ ${tagCorrelHTML}
       </div>
 
       {showClearHistory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(180,60,10,0.6)] max-w-[430px] mx-auto">
-          <div className="rounded-3xl p-6 w-64 text-center shadow-2xl" style={{ background: 'linear-gradient(150deg,#FFD07A,#FF8C5A)' }}>
-            <p className="text-[36px] mb-2">🗂️</p>
-            <p className="text-white font-extrabold text-[15px] mb-2">{lang === 'fr' ? 'Supprimer l\'historique ?' : 'Delete history?'}</p>
-            <p className="text-white/85 text-[12px] mb-4 leading-relaxed">{lang === 'fr' ? 'Toutes tes humeurs seront supprimées définitivement.' : 'All your moods will be permanently deleted.'}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="rounded-3xl p-6 w-72 text-center shadow-2xl mx-4" style={{ background: 'linear-gradient(150deg,#FFD07A,#FF8C5A)' }}>
+            <p className="text-[40px] mb-2">🗂️</p>
+            <p className="text-white font-extrabold text-[16px] mb-2">{lang === 'fr' ? 'Supprimer l\'historique ?' : 'Delete history?'}</p>
+            <p className="text-white/85 text-[12px] mb-5 leading-relaxed">{lang === 'fr' ? 'Toutes tes humeurs seront supprimées définitivement.' : 'All your moods will be permanently deleted.'}</p>
             <div className="flex gap-2">
-              <button onClick={() => setShowClearHistory(false)} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-white/22 border border-white/50">{t('cancel')}</button>
-              <button onClick={handleClearHistory} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-[rgba(255,80,80,0.75)] border-none">{t('clearLabel')}</button>
+              <button onClick={() => setShowClearHistory(false)} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-white/20 border border-white/50 cursor-pointer">{t('cancel')}</button>
+              <button onClick={handleClearHistory} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-[rgba(255,60,60,0.85)] border-none cursor-pointer">{t('clearLabel')}</button>
             </div>
           </div>
         </div>
       )}
 
       {showDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(180,60,10,0.6)] max-w-[430px] mx-auto">
-          <div className="rounded-3xl p-6 w-64 text-center shadow-2xl" style={{ background: 'linear-gradient(150deg,#FFD07A,#FF8C5A)' }}>
-            <p className="text-[36px] mb-2">⚠️</p>
-            <p className="text-white font-extrabold text-[15px] mb-2">{t('deleteTitle')}</p>
-            <p className="text-white/85 text-[12px] mb-4 leading-relaxed">{t('deleteBody')}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="rounded-3xl p-6 w-72 text-center shadow-2xl mx-4" style={{ background: 'linear-gradient(150deg,#FFD07A,#FF8C5A)' }}>
+            <p className="text-[40px] mb-2">⚠️</p>
+            <p className="text-white font-extrabold text-[16px] mb-2">{t('deleteTitle')}</p>
+            <p className="text-white/85 text-[12px] mb-5 leading-relaxed">{t('deleteBody')}</p>
             <div className="flex gap-2">
-              <button onClick={() => setShowDelete(false)} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-white/22 border border-white/50">{t('cancel')}</button>
-              <button onClick={handleDeleteAccount} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-[rgba(255,80,80,0.75)] border-none">{t('deleteConfirm')}</button>
+              <button onClick={() => setShowDelete(false)} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-white/20 border border-white/50 cursor-pointer">{t('cancel')}</button>
+              <button onClick={handleDeleteAccount} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-[rgba(255,60,60,0.85)] border-none cursor-pointer">{t('deleteConfirm')}</button>
             </div>
           </div>
         </div>
