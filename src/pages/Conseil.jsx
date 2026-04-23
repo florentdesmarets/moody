@@ -1112,7 +1112,7 @@ export default function Conseil() {
             type:         'proactive',
             text:         greeting,
             pendingCards: cards,
-            pendingTopic: foundTopic,
+            pendingTopic: matches[0]?.topic ?? 'default',
           },
         ])
       } catch (_) { /* silencieux si pas de données */ }
