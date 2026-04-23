@@ -1,4 +1,4 @@
-const CACHE = 'moody-3.0.0'
+const CACHE = 'moody-3.1.0'
 
 let notifTimer = null
 
