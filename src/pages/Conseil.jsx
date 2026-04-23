@@ -294,7 +294,7 @@ export default function Conseil() {
         {/* Titre */}
         <div className="text-center mb-3 fade-in">
           <h1 className="text-white font-extrabold text-[18px]">
-            {lang === 'fr' ? 'Espace Conseil' : 'Wellness Space'}
+            {lang === 'fr' ? 'Besoin de parler ?' : 'Need to talk?'}
           </h1>
           <p className="text-white/55 text-[10px] mt-0.5">
             {lang === 'fr'
