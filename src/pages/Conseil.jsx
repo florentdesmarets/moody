@@ -10,19 +10,88 @@ import { getAvatar } from '../lib/badges'
 const BOT_AVATAR = '/icons/apple-touch-icon.png'
 
 // ─── Mots-clés de crise (priorité absolue) ────────────────────────────────────
+// Couvre le langage formel, familier et l'argot — les gens en détresse
+// n'écrivent pas "je veux mourir", ils écrivent "j'en peux plus" ou "kms"
 const CRISIS_KEYWORDS = {
   fr: [
-    'mourir', 'mort', 'suicide', 'suicid', 'en finir', 'me tuer', 'me suicid',
-    'plus envie de vivre', 'plus vivre', 'disparaître', 'disparaitre',
-    'tout arrêter', 'plus la force', 'plus supporter', 'ne veux plus être là',
-    'veux mourir', 'envie de mourir', 'je vais me', 'me faire du mal',
-    'désespoir total', 'aucun espoir', 'sans issue',
+    // ── Intentions directes ───────────────────────────────────────
+    'suicid', 'me tuer', 'me suicider', 'me suicid',
+    'mettre fin à', 'mettre fin à mes jours', 'en finir avec ma vie',
+    'me pendre', 'me noyer', 'me jeter', 'me tailler',
+    'me tirer une balle', 'overdose', 'avaler des cachets',
+
+    // ── Formulations indirectes (très fréquentes) ─────────────────
+    'veux mourir', 'envie de mourir', 'plus envie de vivre',
+    'plus vivre', 'ne plus être là', 'ne plus exister',
+    'disparaître pour toujours', 'partir pour toujours',
+    'dormir pour toujours', 'pas me réveiller', 'ne plus me réveiller',
+    'arrêter de souffrir', 'stopper la douleur', 'en finir',
+
+    // ── Argot / langage familier ───────────────────────────────────
+    'crever', 'je veux crever', 'veux crever', 'envie de crever',
+    'je suis mort', 'suis mort de l\'intérieur',
+
+    // ── Sentiment d\'être un fardeau (facteur de risque majeur) ────
+    'fardeau', 'je suis un fardeau', 'jsuis un fardeau',
+    'tout le monde serait mieux sans moi', 'vous seriez mieux sans moi',
+    'mieux sans moi', 'personne ne me manquerait', 'personne s\'en foutrait',
+    'personne s\'en fout de moi', 'je sers à rien', 'je ne sers à rien',
+    'ma vie vaut rien', 'je vaux rien', 'je ne vaux rien',
+    'ma vie sert à rien', 'vivre sert à rien', 'ça sert à quoi de vivre',
+    'à quoi je sers', 'à quoi ça sert',
+
+    // ── Épuisement extrême / abandon ──────────────────────────────
+    'j\'en peux plus', 'j\'en peu plus', 'j\'en peux vraiment plus',
+    'je peux plus continuer', 'j\'arrive plus', 'je tiens plus',
+    'plus la force', 'pu la force', 'plus la force de rien',
+    'lâcher prise sur tout', 'tout lâcher', 'tout plaquer',
+    'plus envie de rien', 'pu envie de rien', 'plus envie de rien du tout',
+    'plus supporter', 'je peux plus supporter',
+
+    // ── Désespoir profond ──────────────────────────────────────────
+    'sans espoir', 'aucun espoir', 'plus aucun espoir',
+    'sans issue', 'aucune issue', 'désespoir total',
+    'jsp pourquoi je suis là', 'pourquoi je suis là',
+    'jsp comment continuer', 'je sais plus comment continuer',
   ],
   en: [
-    'die', 'dying', 'suicide', 'kill myself', 'end it all', 'end my life',
-    'no reason to live', 'not worth living', 'want to disappear',
-    'give up on life', 'no hope', 'hopeless', 'hurt myself', 'self harm',
-    'don\'t want to be here', 'can\'t go on', 'life is worthless',
+    // ── Direct intent ─────────────────────────────────────────────
+    'suicide', 'kill myself', 'end my life', 'end it all',
+    'hang myself', 'drown myself', 'jump off', 'overdose',
+    'take all my pills', 'slit my', 'shoot myself',
+
+    // ── Indirect / euphemisms ─────────────────────────────────────
+    'want to die', 'wanna die', 'wish i was dead', 'wish i were dead',
+    'rather be dead', 'better off dead', 'tired of living',
+    'tired of being alive', 'don\'t want to be here anymore',
+    'don\'t want to exist', 'want to disappear forever',
+    'sleep forever', 'never wake up', 'don\'t want to wake up',
+    'stop the pain', 'end the pain', 'make it stop',
+    'no reason to live', 'not worth living',
+
+    // ── Internet / slang (TikTok, Discord, text…) ─────────────────
+    'kms', 'kys', 'unalive', 'i want to unalive', 'unaliving myself',
+    'off myself', 'offing myself', 'i\'m done', 'done with life',
+    'done with everything', 'can\'t do this anymore',
+
+    // ── Burden / worthlessness (major risk factor) ─────────────────
+    'i\'m a burden', 'feel like a burden', 'i am a burden',
+    'everyone would be better off without me', 'better off without me',
+    'no one would miss me', 'nobody would miss me',
+    'nobody cares', 'no one cares about me',
+    'i\'m worthless', 'i am worthless', 'life is worthless',
+    'i\'m useless', 'i hate myself', 'what\'s the point of living',
+    'what\'s the point', 'nothing matters', 'i don\'t matter',
+
+    // ── Extreme exhaustion / giving up ────────────────────────────
+    'can\'t take it anymore', 'can\'t cope anymore',
+    'i give up', 'giving up on life', 'i can\'t go on',
+    'can\'t go on', 'lost the will', 'losing the will',
+    'no hope', 'hopeless', 'no way out', 'no point',
+
+    // ── Self-harm ─────────────────────────────────────────────────
+    'hurt myself', 'self harm', 'self-harm', 'cutting myself',
+    'harming myself',
   ],
 }
 
