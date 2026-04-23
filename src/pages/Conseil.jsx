@@ -997,11 +997,15 @@ export default function Conseil() {
   const userBadge = getAvatar(profile?.avatar ?? 'starter')
   const [messages,  setMessages]  = useState([{ type: 'bot', text: INTRO[lang] ?? INTRO.fr }])
   const [input,     setInput]     = useState('')
-  const bottomRef = useRef(null)
-  const inputRef  = useRef(null)
+  const bottomRef        = useRef(null)
+  const inputRef         = useRef(null)
+  const proactiveShown   = useRef(false)   // évite le double-affichage (StrictMode / lang)
 
   // ── Chatbot proactif : si l'entrée du jour a des tags négatifs ──────────────
   useEffect(() => {
+    if (proactiveShown.current) return
+    proactiveShown.current = true
+
     async function checkTodayMood() {
       try {
         const now    = new Date()
@@ -1033,7 +1037,7 @@ export default function Conseil() {
       } catch (_) { /* silencieux si pas de données */ }
     }
     checkTodayMood()
-  }, [lang]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
