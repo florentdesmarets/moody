@@ -67,6 +67,7 @@ export default function Account() {
   const [soundActive,       setSoundActive]       = useState(() => localStorage.getItem('soundFx') === 'true')
   const [notifBlocked,      setNotifBlocked]      = useState(false)
   const [showPermHelp,      setShowPermHelp]      = useState(false)
+  const [testState,         setTestState]         = useState(null) // null | 'sending' | 'ok' | 'fail'
   const [textSize,          setTextSize]          = useState(() => localStorage.getItem('textSize') ?? 'md')
   const [badges,            setBadges]            = useState([])
   const [globalStats,       setGlobalStats]       = useState({ count: 0, streak: 0 })
@@ -442,8 +443,10 @@ ${tagCorrelHTML}
               {/* Statut permission + bouton test */}
               <div className="flex items-center justify-between mt-1.5">
                 {isNotificationGranted() ? (
-                  <p className="text-[10px] text-[#22c55e]">
-                    {lang === 'fr' ? '✓ Permission accordée' : '✓ Permission granted'}
+                  <p className="text-[10px]" style={{ color: testState === 'ok' ? '#22c55e' : testState === 'fail' ? '#ef4444' : '#22c55e' }}>
+                    {testState === 'ok'   ? (lang === 'fr' ? '✓ Notification envoyée !' : '✓ Notification sent!')
+                   : testState === 'fail' ? (lang === 'fr' ? '✗ Échec — vérifie Windows (Ne pas déranger)' : '✗ Failed — check Windows (Do Not Disturb)')
+                   : (lang === 'fr' ? '✓ Permission accordée' : '✓ Permission granted')}
                   </p>
                 ) : (
                   <button
@@ -454,21 +457,26 @@ ${tagCorrelHTML}
                   </button>
                 )}
                 <button
+                  disabled={testState === 'sending'}
                   onClick={async () => {
                     if (!isNotificationGranted()) {
-                      // Tenter de re-demander la permission
                       const granted = await requestNotificationPermission()
                       if (granted) { setNotifBlocked(false); setShowPermHelp(false) }
                       else setShowPermHelp(true)
                       return
                     }
+                    setTestState('sending')
                     localStorage.removeItem('lastNotifDate')
-                    fireInAppNotification(lang, true)
+                    const ok = await fireInAppNotification(lang, true)
+                    setTestState(ok ? 'ok' : 'fail')
+                    setTimeout(() => setTestState(null), 4000)
                   }}
-                  className="text-[10px] text-[#FF8040] font-bold bg-transparent border-none cursor-pointer underline">
-                  {isNotificationGranted()
-                    ? (lang === 'fr' ? 'Tester →' : 'Test →')
-                    : (lang === 'fr' ? 'Débloquer →' : 'Unblock →')}
+                  className="text-[10px] text-[#FF8040] font-bold bg-transparent border-none cursor-pointer underline disabled:opacity-50">
+                  {testState === 'sending'
+                    ? '…'
+                    : isNotificationGranted()
+                      ? (lang === 'fr' ? 'Tester →' : 'Test →')
+                      : (lang === 'fr' ? 'Débloquer →' : 'Unblock →')}
                 </button>
               </div>
               {/* Guide de déblocage */}

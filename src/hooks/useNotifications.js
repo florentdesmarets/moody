@@ -32,10 +32,12 @@ export function cancelNotification() {
 }
 
 /**
- * Affiche une notification native via le Service Worker (plus fiable sur Chrome desktop).
- * Utilise localStorage pour ne déclencher qu'une fois par jour.
+ * Affiche une notification native.
+ * Essaie d'abord new Notification() (immédiat, fiable onglet ouvert),
+ * puis fallback Service Worker si ça échoue.
+ * Retourne une Promise<boolean>.
  */
-export function fireInAppNotification(lang = 'fr', force = false) {
+export async function fireInAppNotification(lang = 'fr', force = false) {
   if (!isNotificationGranted()) return false
   const today = new Date().toISOString().slice(0, 10)
   if (!force && localStorage.getItem('lastNotifDate') === today) return false
@@ -55,21 +57,21 @@ export function fireInAppNotification(lang = 'fr', force = false) {
     data: { url: '/mood' },
   }
 
-  // Priorité : Service Worker showNotification (plus fiable sur Chrome desktop)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready
-      .then(reg => reg.showNotification(title, options))
-      .catch(() => {
-        // Fallback : API Notification directe
-        try { new Notification(title, options) } catch (_) {}
-      })
-    return true
-  }
-
-  // Fallback sans SW
+  // 1. Essai direct new Notification() — le plus simple et immédiat
   try {
     const notif = new Notification(title, options)
     notif.onclick = () => { window.focus(); window.location.href = '/mood' }
     return true
-  } catch (_) { return false }
+  } catch (_) { /* continue vers SW */ }
+
+  // 2. Fallback Service Worker
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      await reg.showNotification(title, options)
+      return true
+    } catch (_) { return false }
+  }
+
+  return false
 }
