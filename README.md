@@ -24,7 +24,8 @@ This is not a startup. It's a personal project, built with care, offered for fre
 
 ### 📊 Daily tracking
 - Mood selection via 7 emojis (from hardest to happiest)
-- Last 7 days visible directly on the home screen (colored dots + streak 🔥)
+- If already logged today: shows a **recap card** (emoji, mood level, sleep/food/energy badges, tags) with options to view the calendar or redo the entry
+- Last 7 days visible on the home screen (colored dots + "Today" label + streak 🔥)
 - Positive mode for mixed-polarity days
 - Free journal with predefined tags (30 activities & feelings)
 - Sleep, nutrition and energy tracking
@@ -36,6 +37,7 @@ This is not a startup. It's a personal project, built with care, offered for fre
 ### 📈 Stats & charts
 - Monthly mood + sleep overlay chart
 - Activity/mood correlation: what helps, what affects, comfort activities
+- **Smart tag classification**: inherently negative states (Anxious, Cried, Stressful day, Drank alcohol…) are always placed in "What affects you" regardless of statistical correlation
 - Streak, days tracked, top mood, % positive days
 
 ### 🏆 Badges & avatars
@@ -66,14 +68,19 @@ This is not a startup. It's a personal project, built with care, offered for fre
 ### 🎨 Customisation
 - 8 color themes (with dynamic PWA `theme-color` update)
 - Adjustable text size (Small / Normal / Large / Extra large)
-- Available in **French** and **English**
+- Available in **French** and **English** (preference saved to profile)
 - Desktop version with animated decorative blobs
 
 ### 📄 Export
-- Monthly PDF report with charts and activity analysis
+- Monthly PDF report with charts and activity correlation analysis
 
-### 🔔 Notifications
-- Daily reminder at a chosen time (PWA, Android & iOS 16.4+)
+### 🔔 Web Push notifications
+- Real push notifications via the **VAPID / Web Push protocol** — work even when the app is closed
+- Device subscription stored in Supabase (`push_subscriptions` table)
+- Daily reminder sent by a **Supabase Edge Function** (Deno), triggered every minute by cron-job.org
+- Notification language (FR/EN) follows the user's profile preference
+- Expired subscriptions (410 / 404) automatically cleaned up
+- Fallback: SW timer for desktop (open tab)
 
 ### 📱 PWA
 - Installable on home screen (Android & iOS)
@@ -87,6 +94,12 @@ This is not a startup. It's a personal project, built with care, offered for fre
 - Forgot password with reset link
 - Full account deletion (data + profile + auth)
 
+### 💌 Contact & admin
+- Users can send a message (Support / Suggestion / Bug) from the About page — stored directly in Supabase
+- **Admin interface** (`/admin`) accessible only with the admin account:
+  - **Messages tab**: inbox with type filters, mark read/unread, expand, delete
+  - **Stats tab**: 8 KPI cards (total users, new today, DAU, WAU, total moods, avg mood 30d, push subscribers, messages), 7-day DAU bar chart, weekly retention %, FR/EN language split
+
 ---
 
 ## 🛠 Tech stack
@@ -97,10 +110,11 @@ This is not a startup. It's a personal project, built with care, offered for fre
 | [Vite 8](https://vitejs.dev) | Build & dev server |
 | [Tailwind CSS 3](https://tailwindcss.com) | Styles |
 | [React Router v7](https://reactrouter.com) | Routing |
-| [Supabase](https://supabase.com) | Auth, database, RLS |
+| [Supabase](https://supabase.com) | Auth, database, RLS, Edge Functions |
+| [web-push](https://www.npmjs.com/package/web-push) | VAPID push notifications (Edge Function) |
+| [cron-job.org](https://cron-job.org) | Cron trigger for push Edge Function (every minute) |
 | [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) | Voice synthesis for meditations |
 | [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) | Breathing tones |
-| [OVH Zimbra](https://www.ovhcloud.com) | Transactional emails |
 
 ---
 
@@ -108,7 +122,7 @@ This is not a startup. It's a personal project, built with care, offered for fre
 
 ### Prerequisites
 - Node.js 18+
-- A Supabase project with `profiles` and `moods` tables
+- A Supabase project with the tables described below
 
 ### Setup
 
@@ -123,6 +137,7 @@ Create a `.env.local` file:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_VAPID_PUBLIC_KEY=your_vapid_public_key
 ```
 
 Start the dev server:
@@ -175,6 +190,46 @@ Merges from `dev` to `main` automatically trigger deployment via GitHub Actions.
 | fatigue | int | Energy level 1–3 |
 | note | text | Free-text note |
 
+### `push_subscriptions` table
+| Column | Type | Description |
+|---|---|---|
+| id | uuid | |
+| user_id | uuid | Linked to `profiles` (ON DELETE CASCADE) |
+| endpoint | text | Push endpoint URL |
+| p256dh | text | VAPID encryption key |
+| auth | text | Auth secret |
+| utc_offset | int | Timezone offset in minutes (positive-east) |
+
+### `messages` table
+| Column | Type | Description |
+|---|---|---|
+| id | uuid | |
+| created_at | timestamptz | Submission timestamp |
+| user_id | uuid | Linked to `profiles` (nullable) |
+| user_email | text | Sender email (nullable) |
+| type | text | `support`, `suggest` or `bug` |
+| body | text | Message content |
+| read | boolean | Read status (admin use) |
+
+---
+
+## ⚙️ Supabase Edge Function — `send-daily-push`
+
+Located in `supabase/functions/send-daily-push/index.ts`.
+
+Triggered every minute by cron-job.org. For each active subscription whose `reminder_time` (adjusted by `utc_offset`) matches the current UTC minute, it sends a push notification in the user's language (FR/EN).
+
+**Required Supabase secrets:**
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_EMAIL`
+
+**cron-job.org setup:**
+- URL: `https://<project-ref>.supabase.co/functions/v1/send-daily-push`
+- Schedule: every minute
+- Header: `Authorization: Bearer <service_role_legacy_key>`
+- JWT verification: **disabled** in Edge Function settings
+
 ---
 
 ## 📦 Deployment (GitHub Pages + custom domain)
@@ -186,6 +241,7 @@ The app is served at **[www.moodyapp.fr](https://www.moodyapp.fr)** via GitHub P
 **Required GitHub secrets** (`Settings → Secrets → Actions`):
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_VAPID_PUBLIC_KEY`
 
 **Supabase URL configuration**:
 - Site URL: `https://www.moodyapp.fr/`
@@ -246,7 +302,8 @@ Ce n'est pas une startup. C'est un projet personnel, fait avec soin, proposé gr
 
 ### 📊 Suivi quotidien
 - Sélection de l'humeur via 7 emojis (du plus difficile au plus heureux)
-- Historique des 7 derniers jours visible directement sur la page d'accueil (dots colorés + streak 🔥)
+- Si déjà renseigné aujourd'hui : affichage d'une **carte récap** (emoji, niveau, badges sommeil/alimentation/énergie, tags) avec accès au calendrier ou possibilité de refaire l'entrée
+- Historique des 7 derniers jours (dots colorés + "Auj." pour le jour courant + streak 🔥)
 - Mode positif pour les jours à polarité mixte
 - Journal libre avec tags prédéfinis (30 activités & ressentis)
 - Suivi du sommeil, de l'alimentation et de l'énergie
@@ -258,6 +315,7 @@ Ce n'est pas une startup. C'est un projet personnel, fait avec soin, proposé gr
 ### 📈 Statistiques & graphiques
 - Graphique mensuel humeur + sommeil croisés
 - Corrélation activités / humeur : ce qui aide, ce qui affecte, activités de réconfort
+- **Classification intelligente des tags** : les états négatifs par nature (Anxieux·se, Pleuré·e, Journée stressante, Bu de l'alcool…) sont toujours placés dans "CE QUI T'AFFECTE" quelle que soit la corrélation statistique
 - Streak, jours suivis, humeur fréquente, % positifs
 
 ### 🏆 Badges & avatars
@@ -288,14 +346,19 @@ Ce n'est pas une startup. C'est un projet personnel, fait avec soin, proposé gr
 ### 🎨 Personnalisation
 - 8 thèmes de couleurs (avec mise à jour dynamique de la `theme-color` PWA)
 - Taille du texte réglable (Petit / Normal / Grand / Très grand)
-- Interface disponible en **français** et **anglais**
+- Interface disponible en **français** et **anglais** (préférence sauvegardée dans le profil)
 - Version desktop avec bulles décoratives animées
 
 ### 📄 Export
 - Rapport mensuel PDF avec graphiques et analyse des activités
 
-### 🔔 Notifications
-- Rappel quotidien à l'heure choisie (PWA, Android & iOS 16.4+)
+### 🔔 Notifications Web Push
+- Vraies notifications push via le protocole **VAPID / Web Push** — fonctionnent même si l'appli est fermée
+- Souscription de l'appareil stockée dans Supabase (table `push_subscriptions`)
+- Rappel quotidien envoyé par une **Supabase Edge Function** (Deno), déclenchée chaque minute par cron-job.org
+- La langue de la notification (FR/EN) suit la préférence du profil utilisateur
+- Abonnements expirés (410 / 404) nettoyés automatiquement
+- Fallback : timer SW pour le bureau (onglet ouvert)
 
 ### 📱 PWA
 - Installable sur l'écran d'accueil (Android & iOS)
@@ -309,6 +372,12 @@ Ce n'est pas une startup. C'est un projet personnel, fait avec soin, proposé gr
 - Mot de passe oublié avec lien de réinitialisation
 - Suppression de compte complète (données + profil + auth)
 
+### 💌 Messagerie & espace admin
+- Les utilisateurs peuvent envoyer un message (Soutien / Suggestion / Bug) depuis la page À propos — stocké directement dans Supabase (fini le mailto)
+- **Interface admin** (`/admin`) accessible uniquement avec le compte admin :
+  - **Onglet Messages** : boîte de réception avec filtres par type, marquer lu/non lu, développer, supprimer
+  - **Onglet Stats** : 8 cartes KPI (utilisateurs total, nouveaux auj., actifs auj./7j, humeurs totales, humeur moy. 30j, abonnés push, messages reçus), graphique DAU 7 jours, rétention hebdo %, répartition langues FR/EN
+
 ---
 
 ## 🛠 Stack technique
@@ -319,10 +388,11 @@ Ce n'est pas une startup. C'est un projet personnel, fait avec soin, proposé gr
 | [Vite 8](https://vitejs.dev) | Build & dev server |
 | [Tailwind CSS 3](https://tailwindcss.com) | Styles |
 | [React Router v7](https://reactrouter.com) | Navigation |
-| [Supabase](https://supabase.com) | Auth, base de données, RLS |
+| [Supabase](https://supabase.com) | Auth, base de données, RLS, Edge Functions |
+| [web-push](https://www.npmjs.com/package/web-push) | Notifications push VAPID (Edge Function) |
+| [cron-job.org](https://cron-job.org) | Déclencheur cron de l'Edge Function (toutes les minutes) |
 | [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) | Synthèse vocale pour les méditations |
 | [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) | Tonalités de respiration |
-| [OVH Zimbra](https://www.ovhcloud.com) | Envoi des emails transactionnels |
 
 ---
 
@@ -330,7 +400,7 @@ Ce n'est pas une startup. C'est un projet personnel, fait avec soin, proposé gr
 
 ### Prérequis
 - Node.js 18+
-- Un projet Supabase avec les tables `profiles` et `moods`
+- Un projet Supabase avec les tables décrites ci-dessous
 
 ### Installation
 
@@ -345,6 +415,7 @@ Crée un fichier `.env.local` :
 ```env
 VITE_SUPABASE_URL=ta_url_supabase
 VITE_SUPABASE_ANON_KEY=ta_cle_anon
+VITE_VAPID_PUBLIC_KEY=ta_cle_vapid_publique
 ```
 
 Lance le serveur de développement :
@@ -397,6 +468,46 @@ Les merges de `dev` vers `main` déclenchent automatiquement le déploiement via
 | fatigue | int | Énergie 1–3 |
 | note | text | Note libre |
 
+### Table `push_subscriptions`
+| Colonne | Type | Description |
+|---|---|---|
+| id | uuid | |
+| user_id | uuid | Lié à `profiles` (ON DELETE CASCADE) |
+| endpoint | text | URL du point d'accès push |
+| p256dh | text | Clé de chiffrement VAPID |
+| auth | text | Secret d'authentification |
+| utc_offset | int | Décalage UTC en minutes (positif-est) |
+
+### Table `messages`
+| Colonne | Type | Description |
+|---|---|---|
+| id | uuid | |
+| created_at | timestamptz | Date d'envoi |
+| user_id | uuid | Lié à `profiles` (nullable) |
+| user_email | text | Email de l'expéditeur (nullable) |
+| type | text | `support`, `suggest` ou `bug` |
+| body | text | Contenu du message |
+| read | boolean | Statut lu (usage admin) |
+
+---
+
+## ⚙️ Supabase Edge Function — `send-daily-push`
+
+Fichier : `supabase/functions/send-daily-push/index.ts`
+
+Déclenchée chaque minute par cron-job.org. Pour chaque abonnement actif dont le `reminder_time` (ajusté par `utc_offset`) correspond à la minute UTC courante, elle envoie une notification push dans la langue du profil utilisateur (FR/EN).
+
+**Secrets Supabase requis :**
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_EMAIL`
+
+**Configuration cron-job.org :**
+- URL : `https://<project-ref>.supabase.co/functions/v1/send-daily-push`
+- Fréquence : toutes les minutes
+- Header : `Authorization: Bearer <clé_service_role_legacy>`
+- Vérification JWT : **désactivée** dans les paramètres de l'Edge Function
+
 ---
 
 ## 📦 Déploiement (GitHub Pages + domaine custom)
@@ -408,6 +519,7 @@ L'app est servie sur **[www.moodyapp.fr](https://www.moodyapp.fr)** via GitHub P
 **Secrets GitHub requis** (`Settings → Secrets → Actions`) :
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_VAPID_PUBLIC_KEY`
 
 **Supabase URL Configuration** :
 - Site URL : `https://www.moodyapp.fr/`
