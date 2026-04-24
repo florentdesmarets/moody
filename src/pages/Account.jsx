@@ -64,7 +64,7 @@ export default function Account() {
   const [showClearHistory,  setShowClearHistory]  = useState(false)
   const [notifActive,       setNotifActive]       = useState(profile?.notif_active ?? false)
   const [reminderTime,      setReminderTime]      = useState(profile?.reminder_time ?? '20:00')
-  const [soundActive,       setSoundActive]       = useState(false)
+  const [soundActive,       setSoundActive]       = useState(() => localStorage.getItem('soundFx') === 'true')
   const [notifBlocked,      setNotifBlocked]      = useState(false)
   const [textSize,          setTextSize]          = useState(() => localStorage.getItem('textSize') ?? 'md')
   const [badges,            setBadges]            = useState([])
@@ -75,7 +75,11 @@ export default function Account() {
       setGlobalStats(stats)
       setBadges(computeBadges(stats))
     })
-  }, [])
+    // Reschedule la notification si elle était active (timer perdu après rechargement)
+    if (profile?.notif_active && profile?.reminder_time && isNotificationGranted()) {
+      scheduleNotification(profile.reminder_time, lang)
+    }
+  }, []) // eslint-disable-line
 
   async function handleToggleNotif(v) {
     if (v) {
@@ -433,7 +437,24 @@ ${tagCorrelHTML}
               <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('soundLabel')}</p>
               <p className="text-[14px] text-[#444] font-semibold">{t('soundEffects')}</p>
             </div>
-            <Toggle checked={soundActive} onChange={setSoundActive} />
+            <Toggle checked={soundActive} onChange={v => {
+              setSoundActive(v)
+              localStorage.setItem('soundFx', v ? 'true' : 'false')
+              // Son de confirmation
+              if (v) {
+                try {
+                  const ctx = new (window.AudioContext || window.webkitAudioContext)()
+                  const osc = ctx.createOscillator(); const g = ctx.createGain()
+                  osc.connect(g); g.connect(ctx.destination)
+                  osc.type = 'sine'; osc.frequency.value = 660
+                  g.gain.setValueAtTime(0, ctx.currentTime)
+                  g.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.05)
+                  g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.35)
+                  osc.start(); osc.stop(ctx.currentTime + 0.4)
+                  osc.onended = () => ctx.close()
+                } catch(_) {}
+              }
+            }} />
           </div>
           <div className="py-2.5 border-b border-[#f5ede5]">
             <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide mb-1.5">

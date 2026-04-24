@@ -6,6 +6,22 @@ import EmojiPicker from '../components/EmojiPicker'
 import { useLang } from '../context/LangContext'
 import { useMoods } from '../hooks/useMoods'
 
+/* ── Son de sélection (si effets sonores activés) ────────────── */
+function playSelectSound() {
+  if (localStorage.getItem('soundFx') !== 'true') return
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const osc = ctx.createOscillator(); const g = ctx.createGain()
+    osc.connect(g); g.connect(ctx.destination)
+    osc.type = 'sine'; osc.frequency.value = 528
+    g.gain.setValueAtTime(0, ctx.currentTime)
+    g.gain.linearRampToValueAtTime(0.10, ctx.currentTime + 0.04)
+    g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.28)
+    osc.start(); osc.stop(ctx.currentTime + 0.3)
+    osc.onended = () => ctx.close()
+  } catch(_) {}
+}
+
 /* ── Couleur selon niveau ─────────────────────────────────────── */
 function moodColor(niveau) {
   if (!niveau) return 'rgba(255,255,255,0.15)'
@@ -62,6 +78,7 @@ export default function Mood() {
 
   /* ── Sélection de l'humeur ────────────────────────────────────── */
   function handleSelect(level, emoji) {
+    playSelectSound()
     setSelectedLevel(level)
     if (level >= 6) {
       setFeedback({ msg: t('moodHappy'), btn: t('continueBtn'),  action: () => navigate('/mood-positive', { state: { level, emoji } }) })
