@@ -44,7 +44,7 @@ function ReminderChecker() {
     }
 
     check() // vérif immédiate au montage
-    const id = setInterval(check, 60_000)
+    const id = setInterval(check, 30_000) // 30s pour ne pas rater la fenêtre d'1 min
     return () => clearInterval(id)
   }, [profile?.notif_active, profile?.reminder_time, lang])
 

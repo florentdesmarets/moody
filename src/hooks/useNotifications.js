@@ -36,10 +36,10 @@ export function cancelNotification() {
  * Plus fiable sur desktop quand l'onglet est ouvert.
  * Utilise localStorage pour ne déclencher qu'une fois par jour.
  */
-export function fireInAppNotification(lang = 'fr') {
-  if (!isNotificationGranted()) return
+export function fireInAppNotification(lang = 'fr', force = false) {
+  if (!isNotificationGranted()) return false
   const today = new Date().toISOString().slice(0, 10)
-  if (localStorage.getItem('lastNotifDate') === today) return // déjà envoyée aujourd'hui
+  if (!force && localStorage.getItem('lastNotifDate') === today) return false
   localStorage.setItem('lastNotifDate', today)
 
   const title = 'Moody 🩷'
@@ -54,10 +54,7 @@ export function fireInAppNotification(lang = 'fr') {
       badge: '/icons/favicon-96x96.png',
       tag: 'moody-daily',
     })
-    // Clic → ouvre l'app sur /mood
-    notif.onclick = () => {
-      window.focus()
-      window.location.href = '/mood'
-    }
-  } catch (_) {}
+    notif.onclick = () => { window.focus(); window.location.href = '/mood' }
+    return true
+  } catch (_) { return false }
 }

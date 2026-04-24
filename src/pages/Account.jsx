@@ -9,7 +9,7 @@ import { useMoods } from '../hooks/useMoods'
 import { translations } from '../context/LangContext'
 import { BADGES, computeBadges, getAvatar } from '../lib/badges'
 import { useTheme } from '../context/ThemeContext'
-import { requestNotificationPermission, isNotificationGranted, scheduleNotification, cancelNotification } from '../hooks/useNotifications'
+import { requestNotificationPermission, isNotificationGranted, scheduleNotification, cancelNotification, fireInAppNotification } from '../hooks/useNotifications'
 import { shareBadge } from '../lib/shareBadge'
 
 function Toggle({ checked, onChange }) {
@@ -106,6 +106,7 @@ export default function Account() {
   async function handleTimeChange(t) {
     setReminderTime(t)
     handleSave('reminder_time', t)
+    localStorage.removeItem('lastNotifDate') // reset pour que la nouvelle heure puisse se déclencher aujourd'hui
     if (notifActive && isNotificationGranted()) scheduleNotification(t, lang)
   }
 
@@ -431,12 +432,31 @@ ${tagCorrelHTML}
             <Toggle checked={notifActive} onChange={handleToggleNotif} />
           </div>
           {notifActive && (
-            <div className="flex justify-between items-center py-2.5 border-b border-[#f5ede5]">
-              <div>
+            <div className="py-2.5 border-b border-[#f5ede5]">
+              <div className="flex justify-between items-center">
                 <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('reminderTime')}</p>
+                <input type="time" value={reminderTime} onChange={e => handleTimeChange(e.target.value)}
+                  className="text-[14px] text-[#FF8040] font-bold bg-transparent border-none outline-none cursor-pointer" />
               </div>
-              <input type="time" value={reminderTime} onChange={e => handleTimeChange(e.target.value)}
-                className="text-[14px] text-[#FF8040] font-bold bg-transparent border-none outline-none cursor-pointer" />
+              {/* Statut permission + bouton test */}
+              <div className="flex items-center justify-between mt-1.5">
+                <p className="text-[10px]" style={{ color: isNotificationGranted() ? '#22c55e' : '#ef4444' }}>
+                  {isNotificationGranted()
+                    ? (lang === 'fr' ? '✓ Permission accordée' : '✓ Permission granted')
+                    : (lang === 'fr' ? '✗ Permission refusée dans le navigateur' : '✗ Permission denied in browser')}
+                </p>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('lastNotifDate')
+                    const ok = fireInAppNotification(lang, true)
+                    if (!ok) alert(lang === 'fr'
+                      ? 'Notifications bloquées — autorise-les dans les paramètres du navigateur (🔒 dans la barre d\'adresse).'
+                      : 'Notifications blocked — allow them in browser settings (🔒 in address bar).')
+                  }}
+                  className="text-[10px] text-[#FF8040] font-bold bg-transparent border-none cursor-pointer underline">
+                  {lang === 'fr' ? 'Tester →' : 'Test →'}
+                </button>
+              </div>
             </div>
           )}
           <div className="flex justify-between items-center py-2.5 border-b border-[#f5ede5]">
