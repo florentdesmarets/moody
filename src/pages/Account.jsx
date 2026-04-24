@@ -66,6 +66,7 @@ export default function Account() {
   const [reminderTime,      setReminderTime]      = useState(profile?.reminder_time ?? '20:00')
   const [soundActive,       setSoundActive]       = useState(() => localStorage.getItem('soundFx') === 'true')
   const [notifBlocked,      setNotifBlocked]      = useState(false)
+  const [showPermHelp,      setShowPermHelp]      = useState(false)
   const [textSize,          setTextSize]          = useState(() => localStorage.getItem('textSize') ?? 'md')
   const [badges,            setBadges]            = useState([])
   const [globalStats,       setGlobalStats]       = useState({ count: 0, streak: 0 })
@@ -440,23 +441,55 @@ ${tagCorrelHTML}
               </div>
               {/* Statut permission + bouton test */}
               <div className="flex items-center justify-between mt-1.5">
-                <p className="text-[10px]" style={{ color: isNotificationGranted() ? '#22c55e' : '#ef4444' }}>
-                  {isNotificationGranted()
-                    ? (lang === 'fr' ? '✓ Permission accordée' : '✓ Permission granted')
-                    : (lang === 'fr' ? '✗ Permission refusée dans le navigateur' : '✗ Permission denied in browser')}
-                </p>
+                {isNotificationGranted() ? (
+                  <p className="text-[10px] text-[#22c55e]">
+                    {lang === 'fr' ? '✓ Permission accordée' : '✓ Permission granted'}
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => setShowPermHelp(v => !v)}
+                    className="text-[10px] text-[#ef4444] font-semibold bg-transparent border-none cursor-pointer text-left flex items-center gap-1">
+                    {lang === 'fr' ? '✗ Notifications bloquées' : '✗ Notifications blocked'}
+                    <span className="text-[9px] text-[#aaa]">{showPermHelp ? '▲' : '▼'}</span>
+                  </button>
+                )}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!isNotificationGranted()) {
+                      // Tenter de re-demander la permission
+                      const granted = await requestNotificationPermission()
+                      if (granted) { setNotifBlocked(false); setShowPermHelp(false) }
+                      else setShowPermHelp(true)
+                      return
+                    }
                     localStorage.removeItem('lastNotifDate')
-                    const ok = fireInAppNotification(lang, true)
-                    if (!ok) alert(lang === 'fr'
-                      ? 'Notifications bloquées — autorise-les dans les paramètres du navigateur (🔒 dans la barre d\'adresse).'
-                      : 'Notifications blocked — allow them in browser settings (🔒 in address bar).')
+                    fireInAppNotification(lang, true)
                   }}
                   className="text-[10px] text-[#FF8040] font-bold bg-transparent border-none cursor-pointer underline">
-                  {lang === 'fr' ? 'Tester →' : 'Test →'}
+                  {isNotificationGranted()
+                    ? (lang === 'fr' ? 'Tester →' : 'Test →')
+                    : (lang === 'fr' ? 'Débloquer →' : 'Unblock →')}
                 </button>
               </div>
+              {/* Guide de déblocage */}
+              {showPermHelp && !isNotificationGranted() && (
+                <div className="mt-2 bg-[#fff8f5] rounded-xl p-3 text-[10px] text-[#666] leading-relaxed border border-[#ffe0cc]">
+                  <p className="font-bold text-[#FF7040] mb-1.5">
+                    {lang === 'fr' ? '🔒 Comment autoriser les notifications :' : '🔒 How to allow notifications:'}
+                  </p>
+                  <ol className="list-decimal pl-4 space-y-1">
+                    <li>{lang === 'fr' ? 'Clique sur l\'icône 🔒 (ou ⓘ) dans la barre d\'adresse' : 'Click the 🔒 (or ⓘ) icon in the address bar'}</li>
+                    <li>{lang === 'fr' ? 'Sélectionne « Paramètres du site »' : 'Select "Site settings"'}</li>
+                    <li>{lang === 'fr' ? 'Trouve « Notifications » et choisis « Autoriser »' : 'Find "Notifications" and choose "Allow"'}</li>
+                    <li>{lang === 'fr' ? 'Recharge la page puis réessaie' : 'Reload the page and try again'}</li>
+                  </ol>
+                  <p className="mt-1.5 text-[#aaa]">
+                    {lang === 'fr'
+                      ? '💡 Sur Opera GX : Menu → Sites web → Notifications'
+                      : '💡 On Opera GX: Menu → Websites → Notifications'}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           <div className="flex justify-between items-center py-2.5 border-b border-[#f5ede5]">
