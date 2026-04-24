@@ -9,7 +9,7 @@ import { useMoods } from '../hooks/useMoods'
 import { translations } from '../context/LangContext'
 import { BADGES, computeBadges, getAvatar } from '../lib/badges'
 import { useTheme } from '../context/ThemeContext'
-import { requestNotificationPermission, isNotificationGranted, scheduleNotification, cancelNotification, fireInAppNotification } from '../hooks/useNotifications'
+import { requestNotificationPermission, isNotificationGranted, scheduleNotification, cancelNotification, fireInAppNotification, subscribeToPush, unsubscribeFromPush, serializeSubscription } from '../hooks/useNotifications'
 import { shareBadge } from '../lib/shareBadge'
 
 function Toggle({ checked, onChange }) {
@@ -93,13 +93,38 @@ export default function Account() {
 
   async function handleToggleNotif(v) {
     if (v) {
+      // 1. Permission navigateur
       const granted = isNotificationGranted() || await requestNotificationPermission()
       if (!granted) { setNotifBlocked(true); return }
       setNotifBlocked(false)
+
+      // 2. Souscription Web Push → sauvegarde dans Supabase
+      const sub = await subscribeToPush()
+      if (sub) {
+        const payload = serializeSubscription(sub)
+        await supabase.from('push_subscriptions').upsert(
+          { user_id: user.id, ...payload },
+          { onConflict: 'user_id,endpoint' }
+        )
+      }
+
+      // 3. Fallback SW timer (onglet ouvert, desktop)
       setNotifActive(true)
       handleSave('notif_active', true)
       scheduleNotification(reminderTime, lang)
     } else {
+      // 1. Désouscription Push sur cet appareil + suppression Supabase
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready.catch(() => null)
+        const sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null
+        if (sub) {
+          await supabase.from('push_subscriptions').delete()
+            .eq('user_id', user.id).eq('endpoint', sub.endpoint)
+          await sub.unsubscribe().catch(() => {})
+        }
+      }
+
+      // 2. Annule le timer SW
       setNotifActive(false)
       handleSave('notif_active', false)
       cancelNotification()

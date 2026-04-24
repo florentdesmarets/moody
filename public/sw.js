@@ -1,4 +1,4 @@
-const CACHE = 'moody-3.5.0'
+const CACHE = 'moody-3.6.0'
 
 let notifTimer = null
 
@@ -34,6 +34,24 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(cached => cached ?? fetch(e.request))
   )
+})
+
+// ─── Web Push : réception d'une notification push ─────────────────────────────
+self.addEventListener('push', e => {
+  if (!e.data) return
+  let payload
+  try { payload = e.data.json() } catch (_) { payload = { title: 'Moody 🩷', body: e.data.text() } }
+
+  const title = payload.title ?? 'Moody 🩷'
+  const options = {
+    body:     payload.body     ?? "Comment tu te sens aujourd'hui ? 😊",
+    icon:     payload.icon     ?? '/icons/web-app-manifest-192x192.png',
+    vibrate:  [200, 100, 200],
+    tag:      payload.tag      ?? 'moody-daily',
+    renotify: payload.renotify ?? true,
+    data:     payload.data     ?? { url: '/mood' },
+  }
+  e.waitUntil(self.registration.showNotification(title, options))
 })
 
 // ─── Clic sur la notification → ouvre / focus l'onglet /mood ─────────────────

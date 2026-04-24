@@ -1,3 +1,57 @@
+// ─── Utilitaire VAPID ────────────────────────────────────────────────────────
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw     = window.atob(base64)
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)))
+}
+
+/**
+ * Souscrit cet appareil aux Web Push notifications.
+ * Retourne la PushSubscription ou null si non supporté / permission refusée.
+ */
+export async function subscribeToPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null
+  try {
+    const reg = await navigator.serviceWorker.ready
+    const existing = await reg.pushManager.getSubscription()
+    if (existing) return existing
+    const key = import.meta.env.VITE_VAPID_PUBLIC_KEY
+    return await reg.pushManager.subscribe({
+      userVisibleOnly:      true,
+      applicationServerKey: urlBase64ToUint8Array(key),
+    })
+  } catch (err) {
+    console.error('Push subscription failed:', err)
+    return null
+  }
+}
+
+/**
+ * Désouscrit cet appareil des Web Push notifications.
+ */
+export async function unsubscribeFromPush() {
+  if (!('serviceWorker' in navigator)) return false
+  try {
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.getSubscription()
+    return sub ? sub.unsubscribe() : true
+  } catch (_) { return false }
+}
+
+/**
+ * Sérialise une PushSubscription en objet prêt pour Supabase.
+ */
+export function serializeSubscription(sub) {
+  const json = sub.toJSON()
+  return {
+    endpoint:   json.endpoint,
+    p256dh:     json.keys.p256dh,
+    auth:       json.keys.auth,
+    utc_offset: -new Date().getTimezoneOffset(), // positif-est : UTC+2 → 120
+  }
+}
+
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) return false
   const perm = await Notification.requestPermission()
