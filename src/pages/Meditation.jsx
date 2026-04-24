@@ -5,6 +5,53 @@ import BgBlobs from '../components/BgBlobs'
 import { useLang } from '../context/LangContext'
 import { MEDITATIONS } from '../lib/meditations'
 
+// ─── Musique ambiante (Web Audio) ─────────────────────────────────────────────
+// Accord de quinte pur (A1 + E2 + A2 + E3) → bol tibétain stylisé, très doux
+function createAmbient() {
+  try {
+    const ctx     = new (window.AudioContext || window.webkitAudioContext)()
+    const master  = ctx.createGain()
+    master.gain.setValueAtTime(0, ctx.currentTime)
+    master.connect(ctx.destination)
+
+    const freqs  = [55, 82.41, 110, 164.81, 220] // A1 E2 A2 E3 A3
+    const vols   = [0.04, 0.025, 0.018, 0.012, 0.007]
+    const oscs   = freqs.map((f, i) => {
+      const osc  = ctx.createOscillator()
+      const gain = ctx.createGain()
+      // léger vibrato pour l'humaniser
+      const lfo  = ctx.createOscillator()
+      const lfoG = ctx.createGain()
+      lfo.frequency.value = 0.18 + i * 0.04
+      lfoG.gain.value = 0.35
+      lfo.connect(lfoG)
+      lfoG.connect(osc.frequency)
+      lfo.start()
+      osc.type = 'sine'
+      osc.frequency.value = f
+      gain.gain.value = vols[i]
+      osc.connect(gain)
+      gain.connect(master)
+      osc.start()
+      return osc
+    })
+
+    // Fondu entrant sur 4s
+    master.gain.linearRampToValueAtTime(1, ctx.currentTime + 4)
+
+    return {
+      fadeOut: () => {
+        const t = ctx.currentTime
+        master.gain.setValueAtTime(master.gain.value, t)
+        master.gain.linearRampToValueAtTime(0, t + 3)
+        setTimeout(() => { try { ctx.close() } catch(_) {} }, 3500)
+      }
+    }
+  } catch (_) {
+    return { fadeOut: () => {} }
+  }
+}
+
 // ─── Ton doux de respiration (Web Audio) ──────────────────────────────────────
 function playBreathTone(direction) {
   try {
@@ -24,30 +71,36 @@ function playBreathTone(direction) {
     osc.start(ctx.currentTime)
     osc.stop(ctx.currentTime + 1.0)
     osc.onended = () => ctx.close()
-  } catch (_) { /* silencieux si AudioContext indisponible */ }
+  } catch (_) {}
 }
 
-// ─── Cercle respiratoire animé ────────────────────────────────────────────────
+// ─── Cercle respiratoire animé (purement décoratif) ───────────────────────────
 function BreathingCircle({ breatheState, isPlaying }) {
   const scale = breatheState === 'in'  ? 1.40
               : breatheState === 'out' ? 0.70
-              : isPlaying              ? 1.06
+              : isPlaying              ? 1.08
               : 1
-  const dur   = breatheState ? '5.2s' : '2.5s'
+  const dur = breatheState ? '5.2s' : '2.5s'
+
+  // Label uniquement pendant les phases de respiration
   const label = breatheState === 'in'  ? '↑'
               : breatheState === 'out' ? '↓'
-              : isPlaying              ? '···'
-              : '▶'
+              : null
 
   return (
-    <div className="relative flex items-center justify-center my-5 select-none">
+    <div className="relative flex items-center justify-center my-5 select-none pointer-events-none">
       <div className="absolute w-52 h-52 rounded-full bg-white/8"
         style={{ transform: `scale(${scale})`, transition: `transform ${dur} ease-in-out` }} />
       <div className="absolute w-40 h-40 rounded-full bg-white/10"
         style={{ transform: `scale(${scale})`, transition: `transform ${dur} ease-in-out` }} />
-      <div className="w-28 h-28 rounded-full bg-white/25 border-2 border-white/60 flex items-center justify-center backdrop-blur-sm shadow-lg"
+      <div className="w-28 h-28 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center backdrop-blur-sm shadow-lg"
         style={{ transform: `scale(${scale})`, transition: `transform ${dur} ease-in-out` }}>
-        <span className="text-white font-bold text-[28px] leading-none">{label}</span>
+        {label
+          ? <span className="text-white font-bold text-[28px] leading-none">{label}</span>
+          : isPlaying
+            ? <span className="text-white/60 text-[13px] tracking-widest">···</span>
+            : null
+        }
       </div>
     </div>
   )
@@ -90,14 +143,26 @@ export default function Meditation() {
   const stoppedRef = useRef(true)
   const pausedRef  = useRef(false)
   const timerRef   = useRef(null)
-  const audioRef   = useRef(null) // élément Audio courant
+  const audioRef   = useRef(null)
+  const ambientRef = useRef(null) // musique de fond
 
   // Nettoyage au démontage
   useEffect(() => () => {
     stoppedRef.current = true
     stopAudio()
+    stopAmbient()
     clearTimeout(timerRef.current)
   }, [])
+
+  // ─── Ambient ────────────────────────────────────────────────────────────────
+  function startAmbient() {
+    stopAmbient()
+    ambientRef.current = createAmbient()
+  }
+  function stopAmbient() {
+    ambientRef.current?.fadeOut()
+    ambientRef.current = null
+  }
 
   // ─── Audio MP3 ──────────────────────────────────────────────────────────────
   function stopAudio() {
@@ -111,11 +176,11 @@ export default function Meditation() {
   function playStep(medId, stepLang, idx) {
     return new Promise(resolve => {
       stopAudio()
-      const url  = `/audio/meditations/${medId}_${stepLang}_${String(idx).padStart(2, '0')}.mp3`
+      const url   = `/audio/meditations/${medId}_${stepLang}_${String(idx).padStart(2, '0')}.mp3`
       const audio = new Audio(url)
       audioRef.current = audio
-      audio.onended  = resolve
-      audio.onerror  = resolve // si fichier absent → on continue quand même
+      audio.onended = resolve
+      audio.onerror = resolve
       audio.play().catch(resolve)
     })
   }
@@ -126,18 +191,18 @@ export default function Meditation() {
 
   // ─── Lecture séquentielle ────────────────────────────────────────────────────
   async function runMeditation(med) {
-    const script    = med.script[lang] ?? med.script.fr
-    const stepLang  = (med.script[lang] ? lang : 'fr')
+    const script   = med.script[lang] ?? med.script.fr
+    const stepLang = med.script[lang] ? lang : 'fr'
+
     stoppedRef.current = false
     pausedRef.current  = false
     setIsPlaying(true)
     setIsPaused(false)
     setProgress(0)
+    startAmbient()
 
     for (let i = 0; i < script.length; i++) {
       if (stoppedRef.current) break
-
-      // Attendre la reprise si en pause
       while (pausedRef.current && !stoppedRef.current) await sleep(100)
       if (stoppedRef.current) break
 
@@ -146,19 +211,16 @@ export default function Meditation() {
       setBreatheState(step.breathe ?? null)
       setProgress(Math.round((i / script.length) * 100))
 
-      // Ton de respiration avant la piste audio si c'est une étape breathe
       if (step.breathe) playBreathTone(step.breathe)
 
-      // Lecture du fichier MP3
       await playStep(med.id, stepLang, i)
       if (stoppedRef.current) break
-
-      // Pause silencieuse après la parole
       await sleep(step.pause)
     }
 
     if (!stoppedRef.current) setProgress(100)
     stoppedRef.current = true
+    stopAmbient()
     setIsPlaying(false)
     setIsPaused(false)
     setCurrentStep(-1)
@@ -185,6 +247,7 @@ export default function Meditation() {
     stoppedRef.current = true
     pausedRef.current  = false
     stopAudio()
+    stopAmbient()
     clearTimeout(timerRef.current)
     setIsPlaying(false)
     setIsPaused(false)
@@ -195,7 +258,6 @@ export default function Meditation() {
 
   function handleSelect(med) { if (isPlaying) handleStop(); setSelected(med) }
 
-  // ─── Données courantes ───────────────────────────────────────────────────────
   const script      = selected ? (selected.script[lang] ?? selected.script.fr) : []
   const currentText = currentStep >= 0 ? script[currentStep]?.text : null
 
@@ -212,12 +274,12 @@ export default function Meditation() {
             🎧 {lang === 'fr' ? 'Méditations guidées' : 'Guided meditations'}
           </h1>
           <p className="text-white/55 text-[10px] mt-0.5">
-            {lang === 'fr' ? 'Voix neurales · Tons de respiration · 2–5 min'
-                           : 'Neural voices · Breathing tones · 2–5 min'}
+            {lang === 'fr' ? 'Voix neurales · Musique douce · 2–5 min'
+                           : 'Neural voices · Soft music · 2–5 min'}
           </p>
         </div>
 
-        {/* Liste des méditations */}
+        {/* Liste */}
         <div className="flex flex-col gap-2 mb-4">
           {MEDITATIONS.map(med => (
             <MeditationCard key={med.id} med={med} lang={lang}
@@ -230,7 +292,7 @@ export default function Meditation() {
         {selected && (
           <div className="bg-white/10 rounded-3xl px-5 py-4 border border-white/20 flex flex-col items-center">
 
-            {/* Cercle respiratoire */}
+            {/* Cercle décoratif (pas un bouton) */}
             <BreathingCircle breatheState={breatheState} isPlaying={isPlaying && !isPaused} />
 
             {/* Label inspire / expire */}
@@ -255,28 +317,35 @@ export default function Meditation() {
             </div>
 
             {/* Barre de progression */}
-            <div className="w-full h-1 bg-white/15 rounded-full mb-4 overflow-hidden">
+            <div className="w-full h-1 bg-white/15 rounded-full mb-5 overflow-hidden">
               <div className="h-full bg-white/60 rounded-full transition-all duration-1000"
                 style={{ width: `${progress}%` }} />
             </div>
 
-            {/* Contrôles lecture */}
-            <div className="flex items-center justify-center gap-5">
+            {/* ─── Contrôles — un seul bouton Play, ou Pause + Stop ──────── */}
+            <div className="flex items-center justify-center gap-4">
               {!isPlaying ? (
+                /* État inactif : un seul grand bouton Play */
                 <button onClick={handlePlay}
-                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-[24px] shadow-xl active:scale-95 transition-transform"
+                  className="flex items-center gap-2.5 px-8 py-3 rounded-full bg-white font-bold text-[15px] shadow-xl active:scale-95 transition-transform"
                   style={{ color: selected.color ?? '#FF7040' }}>
-                  ▶
+                  <span>▶</span>
+                  <span>{lang === 'fr' ? 'Commencer' : 'Start'}</span>
                 </button>
               ) : (
+                /* État en lecture : Pause + Stop côte à côte */
                 <>
                   <button onClick={handlePause}
-                    className="w-12 h-12 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center text-[20px] text-white active:scale-95 transition-transform">
-                    {isPaused ? '▶' : '⏸'}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 border-2 border-white/50 text-white font-bold text-[13px] active:scale-95 transition-transform">
+                    <span>{isPaused ? '▶' : '⏸'}</span>
+                    <span>{isPaused
+                      ? (lang === 'fr' ? 'Reprendre' : 'Resume')
+                      : (lang === 'fr' ? 'Pause'     : 'Pause')}</span>
                   </button>
                   <button onClick={handleStop}
-                    className="w-12 h-12 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center text-[20px] text-white active:scale-95 transition-transform">
-                    ⏹
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 border-2 border-white/50 text-white font-bold text-[13px] active:scale-95 transition-transform">
+                    <span>⏹</span>
+                    <span>{lang === 'fr' ? 'Arrêter' : 'Stop'}</span>
                   </button>
                 </>
               )}
