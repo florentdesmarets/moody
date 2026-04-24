@@ -63,6 +63,7 @@ export const THEMES = [
     drawer: 'rgba(15,23,42,0.97)',
     blob1: '#94a3b8', blob2: '#64748b', blob3: '#475569',
     themeColor: '#1e293b',
+    isDark: true,
   },
   {
     id: 'aurora',

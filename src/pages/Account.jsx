@@ -22,28 +22,33 @@ function Toggle({ checked, onChange }) {
   )
 }
 
-function EditField({ placeholder, onSave, onCancel, t }) {
+function EditField({ placeholder, onSave, onCancel, t, isDark }) {
   const [val, setVal] = useState('')
+  const inputBg  = isDark ? 'bg-white/15 text-white placeholder:text-white/40' : 'bg-[#fff3ee] text-[#555]'
+  const cancelCls = isDark ? 'text-white/70 bg-white/10' : 'text-[#FF7040] bg-[#fff3ee]'
   return (
     <div className="py-2">
       <input type="text" placeholder={placeholder} value={val} onChange={e => setVal(e.target.value)}
-        className="w-full bg-[#fff3ee] rounded-full px-4 py-2 text-[13px] text-[#555] outline-none border-none mb-2" />
+        className={`w-full rounded-full px-4 py-2 text-[13px] outline-none border-none mb-2 ${inputBg}`} />
       <div className="flex gap-2">
-        <button onClick={onCancel} className="flex-1 py-2 rounded-full text-[12px] font-bold text-[#FF7040] bg-[#fff3ee] border-none cursor-pointer">{t('cancel')}</button>
+        <button onClick={onCancel} className={`flex-1 py-2 rounded-full text-[12px] font-bold border-none cursor-pointer ${cancelCls}`}>{t('cancel')}</button>
         <button onClick={() => val && onSave(val)} className="flex-1 py-2 rounded-full text-[12px] font-bold text-white bg-[#FF8040] border-none cursor-pointer">{t('save')}</button>
       </div>
     </div>
   )
 }
 
-function CardRow({ label, value, editContent }) {
+function CardRow({ label, value, editContent, isDark }) {
   const [open, setOpen] = useState(false)
+  const divider  = isDark ? 'border-white/10' : 'border-[#f5ede5]'
+  const labelCls = isDark ? 'text-white/45' : 'text-[#aaa]'
+  const valueCls = isDark ? 'text-white/85' : 'text-[#444]'
   return (
     <div>
-      <div className="flex justify-between items-center py-2.5 border-b border-[#f5ede5]">
+      <div className={`flex justify-between items-center py-2.5 border-b ${divider}`}>
         <div>
-          <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{label}</p>
-          <p className="text-[14px] text-[#444] font-semibold">{value}</p>
+          <p className={`text-[11px] ${labelCls} font-semibold uppercase tracking-wide`}>{label}</p>
+          <p className={`text-[14px] ${valueCls} font-semibold`}>{value}</p>
         </div>
         <button onClick={() => setOpen(v => !v)} className="text-[12px] text-[#FF8040] font-bold bg-transparent border-none cursor-pointer">
           {open ? '✕' : 'Modifier'}
@@ -58,7 +63,8 @@ export default function Account() {
   const navigate = useNavigate()
   const { user, profile, signOut, updateProfile } = useAuth()
   const { t, lang, setLang } = useLang()
-  const { themeId, changeTheme, themes } = useTheme()
+  const { themeId, changeTheme, themes, currentTheme } = useTheme()
+  const isDark = currentTheme?.isDark ?? false
   const { fetchGlobalStats, fetchMonth, getStats } = useMoods()
   const [showDelete,        setShowDelete]        = useState(false)
   const [showClearHistory,  setShowClearHistory]  = useState(false)
@@ -428,39 +434,39 @@ ${tagCorrelHTML}
           <p className="text-white font-extrabold text-[15px]">{profile?.prenom ?? user?.email}</p>
         </div>
 
-        <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('personalInfo')}</p>
-        <div className="bg-white/95 rounded-2xl px-4 mb-3">
-          <CardRow label={t('firstname')} value={profile?.prenom ?? user?.email ?? ''}
-            editContent={(close) => <EditField placeholder={t('firstname')} onSave={v => { handleSave('prenom', v); close() }} onCancel={close} t={t} />} />
-          <CardRow label={t('pwdLabel')} value="••••••••"
+        <p className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('personalInfo')}</p>
+        <div className={`${isDark ? 'bg-white/[0.07] border border-white/10' : 'bg-white/95'} rounded-2xl px-4 mb-3`}>
+          <CardRow isDark={isDark} label={t('firstname')} value={profile?.prenom ?? user?.email ?? ''}
+            editContent={(close) => <EditField isDark={isDark} placeholder={t('firstname')} onSave={v => { handleSave('prenom', v); close() }} onCancel={close} t={t} />} />
+          <CardRow isDark={isDark} label={t('pwdLabel')} value="••••••••"
             editContent={(close) => (
               <div className="py-2">
                 {t('pwdPlaceholders').map((ph, i) => (
                   <input key={i} type="password" placeholder={ph}
-                    className="w-full bg-[#fff3ee] rounded-full px-4 py-2 text-[13px] text-[#555] outline-none border-none mb-2" />
+                    className={`w-full rounded-full px-4 py-2 text-[13px] outline-none border-none mb-2 ${isDark ? 'bg-white/15 text-white placeholder:text-white/40' : 'bg-[#fff3ee] text-[#555]'}`} />
                 ))}
                 <div className="flex gap-2">
-                  <button onClick={close} className="flex-1 py-2 rounded-full text-[12px] font-bold text-[#FF7040] bg-[#fff3ee] border-none cursor-pointer">{t('cancel')}</button>
+                  <button onClick={close} className={`flex-1 py-2 rounded-full text-[12px] font-bold border-none cursor-pointer ${isDark ? 'text-white/70 bg-white/10' : 'text-[#FF7040] bg-[#fff3ee]'}`}>{t('cancel')}</button>
                   <button onClick={close} className="flex-1 py-2 rounded-full text-[12px] font-bold text-white bg-[#FF8040] border-none cursor-pointer">{t('save')}</button>
                 </div>
               </div>
             )} />
         </div>
 
-        <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('preferences')}</p>
-        <div className="bg-white/95 rounded-2xl px-4 mb-3 overflow-hidden">
-          <div className="flex justify-between items-center py-2.5 border-b border-[#f5ede5]">
+        <p className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('preferences')}</p>
+        <div className={`${isDark ? 'bg-white/[0.07] border border-white/10' : 'bg-white/95'} rounded-2xl px-4 mb-3 overflow-hidden`}>
+          <div className={`flex justify-between items-center py-2.5 border-b ${isDark ? 'border-white/10' : 'border-[#f5ede5]'}`}>
             <div>
-              <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('notifLabel')}</p>
-              <p className="text-[14px] text-[#444] font-semibold">{t('dailyReminder')}</p>
+              <p className={`text-[11px] ${isDark ? 'text-white/45' : 'text-[#aaa]'} font-semibold uppercase tracking-wide`}>{t('notifLabel')}</p>
+              <p className={`text-[14px] ${isDark ? 'text-white/85' : 'text-[#444]'} font-semibold`}>{t('dailyReminder')}</p>
               {notifBlocked && <p className="text-[10px] text-[#FF5050] mt-0.5">{t('notifBlocked')}</p>}
             </div>
             <Toggle checked={notifActive} onChange={handleToggleNotif} />
           </div>
           {notifActive && (
-            <div className="py-2.5 border-b border-[#f5ede5]">
+            <div className={`py-2.5 border-b ${isDark ? 'border-white/10' : 'border-[#f5ede5]'}`}>
               <div className="flex justify-between items-center">
-                <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('reminderTime')}</p>
+                <p className={`text-[11px] ${isDark ? 'text-white/45' : 'text-[#aaa]'} font-semibold uppercase tracking-wide`}>{t('reminderTime')}</p>
                 <input type="time" value={reminderTime} onChange={e => handleTimeChange(e.target.value)}
                   className="text-[14px] text-[#FF8040] font-bold bg-transparent border-none outline-none cursor-pointer" />
               </div>
@@ -475,7 +481,7 @@ ${tagCorrelHTML}
                     onClick={() => setShowPermHelp(v => !v)}
                     className="text-[10px] text-[#ef4444] font-semibold bg-transparent border-none cursor-pointer text-left flex items-center gap-1">
                     {lang === 'fr' ? '✗ Notifications bloquées' : '✗ Notifications blocked'}
-                    <span className="text-[9px] text-[#aaa]">{showPermHelp ? '▲' : '▼'}</span>
+                    <span className={`text-[9px] ${isDark ? 'text-white/35' : 'text-[#aaa]'}`}>{showPermHelp ? '▲' : '▼'}</span>
                   </button>
                 )}
                 {!isNotificationGranted() && (
@@ -492,7 +498,7 @@ ${tagCorrelHTML}
               </div>
               {/* Guide de déblocage */}
               {showPermHelp && !isNotificationGranted() && (
-                <div className="mt-2 bg-[#fff8f5] rounded-xl p-3 text-[10px] text-[#666] leading-relaxed border border-[#ffe0cc]">
+                <div className={`mt-2 rounded-xl p-3 text-[10px] leading-relaxed border ${isDark ? 'bg-white/10 text-white/65 border-white/15' : 'bg-[#fff8f5] text-[#666] border-[#ffe0cc]'}`}>
                   <p className="font-bold text-[#FF7040] mb-1.5">
                     {lang === 'fr' ? '🔒 Comment autoriser les notifications :' : '🔒 How to allow notifications:'}
                   </p>
@@ -502,7 +508,7 @@ ${tagCorrelHTML}
                     <li>{lang === 'fr' ? 'Trouve « Notifications » et choisis « Autoriser »' : 'Find "Notifications" and choose "Allow"'}</li>
                     <li>{lang === 'fr' ? 'Recharge la page puis réessaie' : 'Reload the page and try again'}</li>
                   </ol>
-                  <p className="mt-1.5 text-[#aaa]">
+                  <p className={`mt-1.5 ${isDark ? 'text-white/35' : 'text-[#aaa]'}`}>
                     {lang === 'fr'
                       ? '💡 Sur Opera GX : Menu → Sites web → Notifications'
                       : '💡 On Opera GX: Menu → Websites → Notifications'}
@@ -511,10 +517,10 @@ ${tagCorrelHTML}
               )}
             </div>
           )}
-          <div className="flex justify-between items-center py-2.5 border-b border-[#f5ede5]">
+          <div className={`flex justify-between items-center py-2.5 border-b ${isDark ? 'border-white/10' : 'border-[#f5ede5]'}`}>
             <div>
-              <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('soundLabel')}</p>
-              <p className="text-[14px] text-[#444] font-semibold">{t('soundEffects')}</p>
+              <p className={`text-[11px] ${isDark ? 'text-white/45' : 'text-[#aaa]'} font-semibold uppercase tracking-wide`}>{t('soundLabel')}</p>
+              <p className={`text-[14px] ${isDark ? 'text-white/85' : 'text-[#444]'} font-semibold`}>{t('soundEffects')}</p>
             </div>
             <Toggle checked={soundActive} onChange={v => {
               setSoundActive(v)
@@ -535,8 +541,8 @@ ${tagCorrelHTML}
               }
             }} />
           </div>
-          <div className="py-2.5 border-b border-[#f5ede5]">
-            <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide mb-1.5">
+          <div className={`py-2.5 border-b ${isDark ? 'border-white/10' : 'border-[#f5ede5]'}`}>
+            <p className={`text-[11px] ${isDark ? 'text-white/45' : 'text-[#aaa]'} font-semibold uppercase tracking-wide mb-1.5`}>
               {lang === 'fr' ? 'Taille du texte' : 'Text size'}
             </p>
             <div className="flex gap-1.5">
@@ -547,17 +553,21 @@ ${tagCorrelHTML}
                 { key: 'xl', label: lang === 'fr' ? 'Très grand' : 'X-Large', icon: 'A', sz: 'text-[16px]' },
               ].map(opt => (
                 <button key={opt.key} onClick={() => handleTextSize(opt.key)}
-                  className={`flex-1 py-1.5 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-0.5 ${textSize === opt.key ? 'border-[#FF8040] bg-[#fff0e8]' : 'border-[#f0e8e0] bg-transparent'}`}>
+                  className={`flex-1 py-1.5 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-0.5 ${
+                    textSize === opt.key
+                      ? 'border-[#FF8040] bg-[#FF8040]/20'
+                      : isDark ? 'border-white/15 bg-transparent' : 'border-[#f0e8e0] bg-transparent'
+                  }`}>
                   <span className={`font-bold text-[#FF8040] ${opt.sz}`}>{opt.icon}</span>
-                  <span className="text-[9px] text-[#888] font-semibold leading-tight text-center">{opt.label}</span>
+                  <span className={`text-[9px] ${isDark ? 'text-white/50' : 'text-[#888]'} font-semibold leading-tight text-center`}>{opt.label}</span>
                 </button>
               ))}
             </div>
           </div>
           <div className="flex justify-between items-center py-2.5">
             <div>
-              <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('langLabel')}</p>
-              <p className="text-[14px] text-[#444] font-semibold">{t('langValue')}</p>
+              <p className={`text-[11px] ${isDark ? 'text-white/45' : 'text-[#aaa]'} font-semibold uppercase tracking-wide`}>{t('langLabel')}</p>
+              <p className={`text-[14px] ${isDark ? 'text-white/85' : 'text-[#444]'} font-semibold`}>{t('langValue')}</p>
             </div>
             <button onClick={() => {
               const newLang = lang === 'fr' ? 'en' : 'fr'
@@ -570,7 +580,7 @@ ${tagCorrelHTML}
           </div>
         </div>
 
-        <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('themeTitle')}</p>
+        <p className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('themeTitle')}</p>
         <div className="grid grid-cols-4 gap-2 mb-3">
           {themes.map(th => {
             const themeLabel = lang === 'en' ? (th.labelEn ?? th.label) : th.label
@@ -593,22 +603,22 @@ ${tagCorrelHTML}
           })}
         </div>
 
-        <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('badgesTitle')}</p>
+        <p className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('badgesTitle')}</p>
         <div className="grid grid-cols-4 gap-2 mb-3">
           {badges.map(badge => (
             <div key={badge.id}
               onClick={() => badge.unlocked && handleSetAvatar(badge.id)}
-              className="flex flex-col items-center bg-white/95 rounded-2xl py-3 px-1 relative"
+              className={`flex flex-col items-center rounded-2xl py-3 px-1 relative ${isDark ? 'bg-white/[0.07] border border-white/10' : 'bg-white/95'}`}
               style={{ opacity: badge.unlocked ? 1 : 0.4, cursor: badge.unlocked ? 'pointer' : 'default' }}>
               <span className="text-[28px] mb-1">{badge.emoji}</span>
               <span className="text-[9px] font-bold text-[#FF8040] text-center leading-tight">{t(badge.labelKey).replace(/[^a-zA-ZÀ-ÿ\s·]/g, '').trim()}</span>
-              {!badge.unlocked && <span className="text-[8px] text-[#bbb]">{t('badgeLocked')}</span>}
+              {!badge.unlocked && <span className={`text-[8px] ${isDark ? 'text-white/35' : 'text-[#bbb]'}`}>{t('badgeLocked')}</span>}
               {badge.unlocked && profile?.avatar === badge.id && (
                 <span className="absolute -top-1 -right-1 text-[12px]">✓</span>
               )}
               {badge.unlocked && (
                 <button onClick={e => { e.stopPropagation(); handleShare(badge) }}
-                  className="mt-1 text-[8px] text-[#aaa] bg-transparent border-none cursor-pointer">
+                  className={`mt-1 text-[8px] bg-transparent border-none cursor-pointer ${isDark ? 'text-white/40' : 'text-[#aaa]'}`}>
                   {t('shareBtn')} ↗
                 </button>
               )}
@@ -616,27 +626,27 @@ ${tagCorrelHTML}
           ))}
         </div>
 
-        <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">🆘 {t('crisisEmergencyContact')}</p>
-        <div className="bg-white/95 rounded-2xl px-4 mb-3">
-          <CardRow label={t('crisisContactName')} value={profile?.contact_urgence_nom || t('crisisNoContact')}
-            editContent={(close) => <EditField placeholder={t('crisisContactName')} onSave={v => { handleSave('contact_urgence_nom', v); close() }} onCancel={close} t={t} />} />
-          <CardRow label={t('crisisContactPhone')} value={profile?.contact_urgence_tel || '—'}
-            editContent={(close) => <EditField placeholder={t('crisisContactPhone')} onSave={v => { handleSave('contact_urgence_tel', v); close() }} onCancel={close} t={t} />} />
+        <p className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-1.5">🆘 {t('crisisEmergencyContact')}</p>
+        <div className={`${isDark ? 'bg-white/[0.07] border border-white/10' : 'bg-white/95'} rounded-2xl px-4 mb-3`}>
+          <CardRow isDark={isDark} label={t('crisisContactName')} value={profile?.contact_urgence_nom || t('crisisNoContact')}
+            editContent={(close) => <EditField isDark={isDark} placeholder={t('crisisContactName')} onSave={v => { handleSave('contact_urgence_nom', v); close() }} onCancel={close} t={t} />} />
+          <CardRow isDark={isDark} label={t('crisisContactPhone')} value={profile?.contact_urgence_tel || '—'}
+            editContent={(close) => <EditField isDark={isDark} placeholder={t('crisisContactPhone')} onSave={v => { handleSave('contact_urgence_tel', v); close() }} onCancel={close} t={t} />} />
         </div>
 
-        <p className="text-white/72 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('privacy')}</p>
-        <div className="bg-white/95 rounded-2xl px-4 mb-4">
-          <div className="flex justify-between items-center py-2.5 border-b border-[#f5ede5]">
+        <p className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-1.5">{t('privacy')}</p>
+        <div className={`${isDark ? 'bg-white/[0.07] border border-white/10' : 'bg-white/95'} rounded-2xl px-4 mb-4`}>
+          <div className={`flex justify-between items-center py-2.5 border-b ${isDark ? 'border-white/10' : 'border-[#f5ede5]'}`}>
             <div>
-              <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('dataLabel')}</p>
-              <p className="text-[14px] text-[#444] font-semibold">{t('exportPDF')}</p>
+              <p className={`text-[11px] ${isDark ? 'text-white/45' : 'text-[#aaa]'} font-semibold uppercase tracking-wide`}>{t('dataLabel')}</p>
+              <p className={`text-[14px] ${isDark ? 'text-white/85' : 'text-[#444]'} font-semibold`}>{t('exportPDF')}</p>
             </div>
             <span onClick={handleExportPDF} className="text-[12px] text-[#FF8040] font-bold cursor-pointer">↓ PDF</span>
           </div>
           <div className="flex justify-between items-center py-2.5">
             <div>
-              <p className="text-[11px] text-[#aaa] font-semibold uppercase tracking-wide">{t('historyLabel')}</p>
-              <p className="text-[14px] text-[#444] font-semibold">{t('deleteHistory')}</p>
+              <p className={`text-[11px] ${isDark ? 'text-white/45' : 'text-[#aaa]'} font-semibold uppercase tracking-wide`}>{t('historyLabel')}</p>
+              <p className={`text-[14px] ${isDark ? 'text-white/85' : 'text-[#444]'} font-semibold`}>{t('deleteHistory')}</p>
             </div>
             <span onClick={() => setShowClearHistory(true)} className="text-[12px] text-[#FF5050] font-bold cursor-pointer">{t('clearLabel')}</span>
           </div>
@@ -658,7 +668,7 @@ ${tagCorrelHTML}
 
       {showClearHistory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="rounded-3xl p-6 w-72 text-center shadow-2xl mx-4" style={{ background: 'linear-gradient(150deg,#FFD07A,#FF8C5A)' }}>
+          <div className="rounded-3xl p-6 w-72 text-center shadow-2xl mx-4" style={{ background: 'var(--bg-gradient)' }}>
             <p className="text-[40px] mb-2">🗂️</p>
             <p className="text-white font-extrabold text-[16px] mb-2">{lang === 'fr' ? 'Supprimer l\'historique ?' : 'Delete history?'}</p>
             <p className="text-white/85 text-[12px] mb-5 leading-relaxed">{lang === 'fr' ? 'Toutes tes humeurs seront supprimées définitivement.' : 'All your moods will be permanently deleted.'}</p>
@@ -672,7 +682,7 @@ ${tagCorrelHTML}
 
       {showDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="rounded-3xl p-6 w-72 text-center shadow-2xl mx-4" style={{ background: 'linear-gradient(150deg,#FFD07A,#FF8C5A)' }}>
+          <div className="rounded-3xl p-6 w-72 text-center shadow-2xl mx-4" style={{ background: 'var(--bg-gradient)' }}>
             <p className="text-[40px] mb-2">⚠️</p>
             <p className="text-white font-extrabold text-[16px] mb-2">{t('deleteTitle')}</p>
             <p className="text-white/85 text-[12px] mb-5 leading-relaxed">{t('deleteBody')}</p>

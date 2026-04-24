@@ -67,9 +67,18 @@ This is not a startup. It's a personal project, built with care, offered for fre
 
 ### 🎨 Customisation
 - 8 color themes (with dynamic PWA `theme-color` update)
+- **Dark theme support**: Night theme triggers dark-mode card styles (glass effect, white text) — all cards, labels and dividers adapt automatically
+- The mood edit modal and confirmation dialogs follow the current theme (`var(--bg-gradient)`)
 - Adjustable text size (Small / Normal / Large / Extra large)
 - Available in **French** and **English** (preference saved to profile)
 - Desktop version with animated decorative blobs
+
+### 🚀 Onboarding
+- 4-slide intro presented on first launch (persisted in `localStorage`)
+- Swipe gestures (left/right) on mobile
+- Animated transitions (slide direction-aware)
+- Clickable progress dots, skip button, back button
+- Redirects to the app on completion or skip
 
 ### 📄 Export
 - Monthly PDF report with charts and activity correlation analysis
@@ -345,9 +354,18 @@ Ce n'est pas une startup. C'est un projet personnel, fait avec soin, proposé gr
 
 ### 🎨 Personnalisation
 - 8 thèmes de couleurs (avec mise à jour dynamique de la `theme-color` PWA)
+- **Support du thème sombre** : le thème Nuit active un mode dark sur toutes les cartes (effet verre, texte blanc) — labels, valeurs et séparateurs s'adaptent automatiquement
+- La modale de saisie d'humeur et les modales de confirmation suivent le thème courant (`var(--bg-gradient)`)
 - Taille du texte réglable (Petit / Normal / Grand / Très grand)
 - Interface disponible en **français** et **anglais** (préférence sauvegardée dans le profil)
 - Version desktop avec bulles décoratives animées
+
+### 🚀 Onboarding
+- 4 slides d'introduction au premier lancement (persisté dans `localStorage`)
+- Swipe tactile (gauche/droite) sur mobile
+- Transitions animées (direction-aware)
+- Points de progression cliquables, bouton "Passer", bouton retour
+- Redirige vers l'app à la complétion ou au passage
 
 ### 📄 Export
 - Rapport mensuel PDF avec graphiques et analyse des activités
