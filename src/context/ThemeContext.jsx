@@ -6,6 +6,7 @@ const ThemeContext = createContext(null)
 function applyTheme(theme) {
   const root = document.documentElement
   root.style.setProperty('--bg-gradient', theme.gradient)
+  root.style.setProperty('--bg-overlay', theme.overlay ?? 'rgba(0,0,0,0)')
   root.style.setProperty('--drawer-bg', theme.drawer)
   root.style.setProperty('--blob1', theme.blob1)
   root.style.setProperty('--blob2', theme.blob2)

@@ -66,12 +66,12 @@ export default function MoodModal({ open, onClose, onSave, dayLabel, initialMood
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 transition-all duration-300 ${open ? 'bg-[rgba(180,60,10,0.6)] pointer-events-auto' : 'bg-transparent pointer-events-none'}`}
+        className={`fixed inset-0 z-40 transition-all duration-300 ${open ? 'bg-black/50 pointer-events-auto' : 'bg-transparent pointer-events-none'}`}
         onClick={onClose}
       />
       <div
         className={`fixed bottom-0 left-0 right-0 z-50 max-w-[430px] mx-auto rounded-t-3xl transition-transform duration-300 ${open ? 'translate-y-0' : 'translate-y-full'}`}
-        style={{ background: 'linear-gradient(150deg, #FFD07A, #FF8C5A)' }}
+        style={{ background: 'var(--bg-gradient)' }}
       >
         {/* Poignée */}
         <div className="flex justify-center pt-2.5 pb-1">

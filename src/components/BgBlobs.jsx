@@ -1,6 +1,10 @@
 export default function BgBlobs() {
   return (
     <>
+      {/* Overlay sombre pour les thèmes clairs — améliore le contraste du texte blanc */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'var(--bg-overlay)', zIndex: 0 }} />
+
       {/* Bulles mobiles — dans le contenu centré */}
       <div className="blob w-44 h-44 -top-10 -right-10"
         style={{ background: 'var(--blob1)', animationDuration: '9s', animationDelay: '0s' }} />
