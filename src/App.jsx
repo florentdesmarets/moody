@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { LangProvider } from './context/LangContext'
+import { LangProvider, useLang } from './context/LangContext'
 import { ThemeProvider } from './context/ThemeContext'
 import PWAInstallBanner from './components/PWAInstallBanner'
+import { fireInAppNotification, isNotificationGranted } from './hooks/useNotifications'
 import Welcome      from './pages/Welcome'
 import Login        from './pages/Login'
 import Register     from './pages/Register'
@@ -24,6 +25,31 @@ import Crisis         from './pages/Crisis'
 import About          from './pages/About'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword  from './pages/ResetPassword'
+
+// ─── Vérification du rappel quotidien ─────────────────────────────────────────
+// Toutes les 60s, compare l'heure actuelle à reminder_time du profil.
+// Plus fiable que le timer SW sur desktop (onglet ouvert).
+function ReminderChecker() {
+  const { profile } = useAuth()
+  const { lang }    = useLang()
+
+  useEffect(() => {
+    if (!profile?.notif_active || !profile?.reminder_time) return
+
+    const check = () => {
+      if (!isNotificationGranted()) return
+      const now  = new Date()
+      const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+      if (hhmm === profile.reminder_time) fireInAppNotification(lang)
+    }
+
+    check() // vérif immédiate au montage
+    const id = setInterval(check, 60_000)
+    return () => clearInterval(id)
+  }, [profile?.notif_active, profile?.reminder_time, lang])
+
+  return null
+}
 
 function LoadingScreen() {
   return (
@@ -70,6 +96,7 @@ export default function App() {
       <ThemeProvider>
         <LangProvider>
           <div className="w-full min-h-screen">
+            <ReminderChecker />
             <BrowserRouter basename="">
               <PWAInstallBanner />
               <Routes>

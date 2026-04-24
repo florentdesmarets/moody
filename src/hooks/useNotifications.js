@@ -18,7 +18,7 @@ export function scheduleNotification(time, lang = 'fr') {
     reg.active?.postMessage({
       type: 'SCHEDULE_NOTIFICATION',
       time,
-      title: 'MoodTracker',
+      title: 'Moody',
       body,
     })
   })
@@ -29,4 +29,35 @@ export function cancelNotification() {
   navigator.serviceWorker.ready.then(reg => {
     reg.active?.postMessage({ type: 'CANCEL_NOTIFICATION' })
   })
+}
+
+/**
+ * Affiche une notification native directement (pas via SW).
+ * Plus fiable sur desktop quand l'onglet est ouvert.
+ * Utilise localStorage pour ne déclencher qu'une fois par jour.
+ */
+export function fireInAppNotification(lang = 'fr') {
+  if (!isNotificationGranted()) return
+  const today = new Date().toISOString().slice(0, 10)
+  if (localStorage.getItem('lastNotifDate') === today) return // déjà envoyée aujourd'hui
+  localStorage.setItem('lastNotifDate', today)
+
+  const title = 'Moody 🩷'
+  const body  = lang === 'en'
+    ? 'How are you feeling today? 😊'
+    : "Comment tu te sens aujourd'hui ? 😊"
+
+  try {
+    const notif = new Notification(title, {
+      body,
+      icon: '/icons/web-app-manifest-192x192.png',
+      badge: '/icons/favicon-96x96.png',
+      tag: 'moody-daily',
+    })
+    // Clic → ouvre l'app sur /mood
+    notif.onclick = () => {
+      window.focus()
+      window.location.href = '/mood'
+    }
+  } catch (_) {}
 }
