@@ -4,6 +4,8 @@ import QRCode from 'qrcode'
 import BgBlobs from '../components/BgBlobs'
 import AppHeader from '../components/AppHeader'
 import { useLang } from '../context/LangContext'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 const APP_URL    = 'https://www.moodyapp.fr/'
 const DONATE_URL = 'https://buymeacoffee.com/florent.d'
@@ -32,16 +34,26 @@ function AppQRCode({ size = 110 }) {
 export default function About() {
   const navigate = useNavigate()
   const { t, lang } = useLang()
+  const { user } = useAuth()
   const [feedbackType, setFeedbackType] = useState('support')
   const [feedbackMsg,  setFeedbackMsg]  = useState('')
   const [feedbackSent, setFeedbackSent] = useState(false)
+  const [sendError,    setSendError]    = useState(false)
 
-  function handleSendFeedback() {
+  async function handleSendFeedback() {
     if (!feedbackMsg.trim()) return
-    const subject = feedbackType === 'support'
-      ? (lang === 'fr' ? 'Message de soutien — Moody' : 'Support message — Moody')
-      : (lang === 'fr' ? 'Suggestion — Moody' : 'Suggestion — Moody')
-    window.location.href = `mailto:florent.desmarets@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(feedbackMsg)}`
+    setSendError(false)
+    const { error } = await supabase.from('messages').insert({
+      user_id:    user?.id   ?? null,
+      user_email: user?.email ?? null,
+      type:       feedbackType,
+      body:       feedbackMsg.trim(),
+    })
+    if (error) {
+      console.error('Message send error:', error)
+      setSendError(true)
+      return
+    }
     setFeedbackSent(true)
     setFeedbackMsg('')
     setTimeout(() => setFeedbackSent(false), 4000)
@@ -149,15 +161,20 @@ export default function About() {
             rows={3}
             className="w-full bg-white/90 rounded-2xl px-4 py-3 text-[13px] text-[#555] outline-none border-none resize-none mb-3"
           />
-          {feedbackSent
-            ? <p className="text-center text-white font-bold text-[13px] py-2">
-                {lang === 'fr' ? '✅ Merci beaucoup !' : '✅ Thank you so much!'}
-              </p>
-            : <button onClick={handleSendFeedback}
-                className="w-full py-2.5 rounded-full text-[13px] font-bold text-[#FF7040] bg-white active:scale-[0.97] transition-transform">
-                {lang === 'fr' ? 'Envoyer ✉️' : 'Send ✉️'}
-              </button>
-          }
+          {feedbackSent ? (
+            <p className="text-center text-white font-bold text-[13px] py-2">
+              {lang === 'fr' ? '✅ Merci beaucoup !' : '✅ Thank you so much!'}
+            </p>
+          ) : sendError ? (
+            <p className="text-center text-red-300 text-[12px] py-2">
+              {lang === 'fr' ? '❌ Erreur d\'envoi, réessaie.' : '❌ Send failed, please retry.'}
+            </p>
+          ) : (
+            <button onClick={handleSendFeedback}
+              className="w-full py-2.5 rounded-full text-[13px] font-bold text-[#FF7040] bg-white active:scale-[0.97] transition-transform">
+              {lang === 'fr' ? 'Envoyer ✉️' : 'Send ✉️'}
+            </button>
+          )}
         </div>
 
         {/* Version */}

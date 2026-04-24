@@ -21,6 +21,16 @@ const COPING_INDICES = new Set([
 // États qui sont des conséquences, jamais des causes — exclus de l'analyse
 const EXCLUDE_INDICES = new Set([2]) // Mal dormi·e / Slept badly
 
+// Tags négatifs par nature — toujours classés dans "CE QUI T'AFFECTE",
+// quelle que soit leur corrélation statistique ce mois-ci.
+const NEGATIVE_INDICES = new Set([
+  12, // Pleuré·e / Cried
+  13, // Anxieux·se / Anxious
+  14, // Fatigué·e / Tired (tag)
+  22, // Journée stressante / Stressful day
+  28, // Bu de l'alcool / Drank alcohol
+])
+
 function moodEmoji(avg) {
   return EMOJIS[Math.max(0, Math.min(6, Math.round(avg) - 1))]
 }
@@ -168,12 +178,14 @@ export default function ChartTags({ monthEntries, t, month, year }) {
     )
   }
 
-  const helps   = analysis.filter(s => s.impact >=  0.3)
-  // Sépare les "vrais" drains des activités de réconfort (corrélées mais non causales)
-  const allDrains  = analysis.filter(s => s.impact <= -0.3)
+  // Tags positifs : exclut les tags négatifs par nature (ex : Anxieux·se)
+  const helps   = analysis.filter(s => s.impact >=  0.3 && !NEGATIVE_INDICES.has(s.idx))
+  // Drains : impact négatif OU tag négatif par nature (quelle que soit la corrélation)
+  const allDrains  = analysis.filter(s => s.impact <= -0.3 || NEGATIVE_INDICES.has(s.idx))
   const drains     = allDrains.filter(s => !COPING_INDICES.has(s.idx))
   const comfort    = allDrains.filter(s =>  COPING_INDICES.has(s.idx))
-  const neutral    = analysis.filter(s => Math.abs(s.impact) < 0.3)
+  // Neutre : ni positif, ni drain, ni négatif par nature
+  const neutral    = analysis.filter(s => Math.abs(s.impact) < 0.3 && !NEGATIVE_INDICES.has(s.idx))
   const maxImpact  = Math.max(...analysis.map(s => Math.abs(s.impact)), 0.5)
 
   if (helps.length === 0 && drains.length === 0 && comfort.length === 0) return null

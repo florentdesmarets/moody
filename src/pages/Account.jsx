@@ -642,6 +642,13 @@ ${tagCorrelHTML}
           </div>
         </div>
 
+        {user?.email === 'florent.desmarets@gmail.com' && (
+          <button onClick={() => navigate('/admin')}
+            className="w-full py-2.5 rounded-full text-[13px] font-bold text-white bg-white/15 border-2 border-white/30 active:scale-[0.98] transition-transform mb-3 flex items-center justify-center gap-2">
+            💌 Espace admin
+          </button>
+        )}
+
         <button onClick={() => setShowDelete(true)}
           className="w-full py-2.5 rounded-full text-[13px] font-bold text-white bg-[rgba(255,80,80,0.25)] border-2 border-[rgba(255,120,120,0.6)] active:bg-[rgba(255,80,80,0.45)] transition-colors mb-4">
           {t('deleteAccount')}

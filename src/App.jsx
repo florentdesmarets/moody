@@ -23,6 +23,7 @@ import Conseil        from './pages/Conseil'
 import Meditation     from './pages/Meditation'
 import Crisis         from './pages/Crisis'
 import About          from './pages/About'
+import Admin          from './pages/Admin'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword  from './pages/ResetPassword'
 
@@ -64,6 +65,13 @@ function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <LoadingScreen />
   return user ? children : <Navigate to="/" replace />
+}
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (!user || user.email !== 'florent.desmarets@gmail.com') return <Navigate to="/" replace />
+  return children
 }
 
 function PublicRoute({ children }) {
@@ -118,6 +126,7 @@ export default function App() {
                 <Route path="/meditation"    element={<PrivateRoute><Meditation /></PrivateRoute>} />
                 <Route path="/crisis"        element={<PrivateRoute><Crisis /></PrivateRoute>} />
                 <Route path="/about"           element={<About />} />
+                <Route path="/admin"           element={<AdminRoute><Admin /></AdminRoute>} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password"  element={<ResetPassword />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
