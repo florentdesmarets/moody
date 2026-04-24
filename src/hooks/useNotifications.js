@@ -33,8 +33,7 @@ export function cancelNotification() {
 
 /**
  * Affiche une notification native.
- * Essaie d'abord new Notification() (immédiat, fiable onglet ouvert),
- * puis fallback Service Worker si ça échoue.
+ * Essaie SW showNotification puis new Notification() en fallback.
  * Retourne une Promise<boolean>.
  */
 export async function fireInAppNotification(lang = 'fr', force = false) {
@@ -51,27 +50,27 @@ export async function fireInAppNotification(lang = 'fr', force = false) {
   const options = {
     body,
     icon: '/icons/web-app-manifest-192x192.png',
-    badge: '/icons/favicon-96x96.png',
     tag: 'moody-daily',
     renotify: true,
     data: { url: '/mood' },
   }
 
-  // 1. Essai direct new Notification() — le plus simple et immédiat
+  // 1. Service Worker showNotification (plus fiable sur Chromium/Opera)
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    try {
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 3000)),
+      ])
+      await reg.showNotification(title, options)
+      return true
+    } catch (_) { /* continue vers fallback */ }
+  }
+
+  // 2. Fallback : new Notification() direct
   try {
     const notif = new Notification(title, options)
     notif.onclick = () => { window.focus(); window.location.href = '/mood' }
     return true
-  } catch (_) { /* continue vers SW */ }
-
-  // 2. Fallback Service Worker
-  if ('serviceWorker' in navigator) {
-    try {
-      const reg = await navigator.serviceWorker.ready
-      await reg.showNotification(title, options)
-      return true
-    } catch (_) { return false }
-  }
-
-  return false
+  } catch (_) { return false }
 }

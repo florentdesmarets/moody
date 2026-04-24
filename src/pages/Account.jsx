@@ -68,6 +68,7 @@ export default function Account() {
   const [notifBlocked,      setNotifBlocked]      = useState(false)
   const [showPermHelp,      setShowPermHelp]      = useState(false)
   const [testState,         setTestState]         = useState(null) // null | 'sending' | 'ok' | 'fail'
+  const [toast,             setToast]             = useState(null)
   const [textSize,          setTextSize]          = useState(() => localStorage.getItem('textSize') ?? 'md')
   const [badges,            setBadges]            = useState([])
   const [globalStats,       setGlobalStats]       = useState({ count: 0, streak: 0 })
@@ -469,7 +470,11 @@ ${tagCorrelHTML}
                     localStorage.removeItem('lastNotifDate')
                     const ok = await fireInAppNotification(lang, true)
                     setTestState(ok ? 'ok' : 'fail')
-                    setTimeout(() => setTestState(null), 4000)
+                    // Toast visible dans la page dans tous les cas
+                    setToast(ok
+                      ? (lang === 'fr' ? '🔔 Notification envoyée ! Vérifie le centre de notifs Windows.' : '🔔 Notification sent! Check Windows notification center.')
+                      : (lang === 'fr' ? '❌ Échec — vérifie Paramètres Windows → Notifications → Opera GX' : '❌ Failed — check Windows Settings → Notifications → Opera GX'))
+                    setTimeout(() => { setTestState(null); setToast(null) }, 5000)
                   }}
                   className="text-[10px] text-[#FF8040] font-bold bg-transparent border-none cursor-pointer underline disabled:opacity-50">
                   {testState === 'sending'
@@ -645,6 +650,14 @@ ${tagCorrelHTML}
               <button onClick={handleClearHistory} className="flex-1 py-2.5 rounded-full text-[13px] font-bold text-white bg-[rgba(255,60,60,0.85)] border-none cursor-pointer">{t('clearLabel')}</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast de confirmation test notification */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-2xl shadow-xl text-white text-[12px] font-semibold text-center max-w-[300px] fade-in"
+          style={{ background: toast.startsWith('🔔') ? 'rgba(34,197,94,0.92)' : 'rgba(239,68,68,0.92)', backdropFilter: 'blur(8px)' }}>
+          {toast}
         </div>
       )}
 
