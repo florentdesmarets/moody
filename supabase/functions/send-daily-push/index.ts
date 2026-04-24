@@ -27,8 +27,7 @@ Deno.serve(async (_req) => {
       endpoint, p256dh, auth, utc_offset,
       profiles!inner (
         notif_active,
-        reminder_time,
-        langue
+        reminder_time
       )
     `)
     .eq('profiles.notif_active', true)
@@ -41,7 +40,7 @@ Deno.serve(async (_req) => {
   const results = await Promise.allSettled(
     (rows ?? [])
       .filter((row: Record<string, unknown>) => {
-        const profile = row.profiles as { notif_active: boolean; reminder_time: string; langue: string }
+        const profile = row.profiles as { notif_active: boolean; reminder_time: string }
         if (!profile?.reminder_time) return false
 
         const [h, m] = profile.reminder_time.split(':').map(Number)
@@ -52,12 +51,8 @@ Deno.serve(async (_req) => {
         return reminderUTCMinutes === nowUTCMinutes
       })
       .map(async (row: Record<string, unknown>) => {
-        const profile = row.profiles as { langue: string }
-        const lang  = profile?.langue ?? 'fr'
         const title = 'Moody 🩷'
-        const body  = lang === 'en'
-          ? 'How are you feeling today? 😊'
-          : "Comment tu te sens aujourd'hui ? 😊"
+        const body  = "Comment tu te sens aujourd'hui ? 😊"
 
         const pushSubscription = {
           endpoint: row.endpoint as string,
