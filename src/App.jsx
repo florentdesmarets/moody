@@ -24,6 +24,7 @@ import Meditation     from './pages/Meditation'
 import Crisis         from './pages/Crisis'
 import About          from './pages/About'
 import Admin          from './pages/Admin'
+import Onboarding     from './pages/Onboarding'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword  from './pages/ResetPassword'
 
@@ -62,6 +63,16 @@ function LoadingScreen() {
 }
 
 function PrivateRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (!user) return <Navigate to="/" replace />
+  // Redirige vers l'onboarding au premier lancement
+  if (!localStorage.getItem('moody_onboarded')) return <Navigate to="/onboarding" replace />
+  return children
+}
+
+// Route auth-only sans vérification onboarding (pour la page onboarding elle-même)
+function AuthRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <LoadingScreen />
   return user ? children : <Navigate to="/" replace />
@@ -125,6 +136,7 @@ export default function App() {
                 <Route path="/conseil"       element={<PrivateRoute><Conseil /></PrivateRoute>} />
                 <Route path="/meditation"    element={<PrivateRoute><Meditation /></PrivateRoute>} />
                 <Route path="/crisis"        element={<PrivateRoute><Crisis /></PrivateRoute>} />
+                <Route path="/onboarding"      element={<AuthRoute><Onboarding /></AuthRoute>} />
                 <Route path="/about"           element={<About />} />
                 <Route path="/admin"           element={<AdminRoute><Admin /></AdminRoute>} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
